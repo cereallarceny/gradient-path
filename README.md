@@ -10,6 +10,7 @@ A small library to have any gradient follow along any SVG path
 [This library is a generalization of the work of the great Mike Bostock.](https://bl.ocks.org/mbostock/4163057) We opted to remove the depedency on D3 and generalize the code a bit more to allow other people to more easily use it in their projects.
 
 [Play around with it in Storybook](https://mnsht.github.io/gradient-path/)
+[Play around with it on CodeSandbox](https://codesandbox.io/s/gradient-path-wstzn)
 
 ## Installation
 
