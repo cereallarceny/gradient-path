@@ -12,7 +12,7 @@
     "start": "rollup -c -w",
     "build": "rollup -c",
     "prepare": "yarn build",
-    "release": "release-it && yarn deploy",
+    "release": "release-it",
     "storybook": "start-storybook",
     "storybook:build": "build-storybook -c .storybook",
     "predeploy": "yarn storybook:build",
