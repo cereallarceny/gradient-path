@@ -2,3 +2,4 @@
 /dist
 /storybook-static
 .DS_Store
+yarn-error.log
