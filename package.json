@@ -9,18 +9,15 @@
     "dist"
   ],
   "scripts": {
-    "start": "rollup -c -w",
     "build": "rollup -c",
     "prepare": "yarn build",
-    "release": "release-it",
-    "storybook": "start-storybook",
-    "storybook:build": "build-storybook -c .storybook",
-    "predeploy": "yarn storybook:build",
+    "version": "auto-changelog -p && git add CHANGELOG.md",
+    "release": "np",
+    "start": "start-storybook",
+    "storybook-build": "build-storybook -c .storybook",
+    "predeploy": "yarn storybook-build",
     "deploy": "gh-pages -d storybook-static && rm -rf storybook-static",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "publishConfig": {
-    "registry": "https://registry.npmjs.org/"
+    "test": "echo \"Error: no test specified\""
   },
   "repository": {
     "type": "git",
@@ -53,15 +50,16 @@
     "@babel/preset-react": "^7.0.0",
     "@storybook/addon-knobs": "^5.1.9",
     "@storybook/react": "^5.1.9",
+    "auto-changelog": "^1.13.0",
     "babel-loader": "^8.0.6",
     "d3": "^5.9.7",
     "gh-pages": "^2.0.1",
     "husky": "^3.0.0",
+    "np": "^5.0.3",
     "prettier": "^1.18.2",
     "pretty-quick": "^1.11.1",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
-    "release-it": "^12.3.0",
     "rollup": "^1.16.4",
     "rollup-plugin-babel": "^4.3.3",
     "rollup-plugin-commonjs": "^10.0.1",
