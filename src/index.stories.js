@@ -5,6 +5,7 @@ import { withKnobs, number, boolean, text } from '@storybook/addon-knobs';
 import * as d3 from 'd3';
 
 import gradientPath, { getData, getPathPoints, getPathData } from './index';
+import { splitPath, drawPoints, drawSegments } from './refactor';
 
 const samplePathData = `M24.3,30
 C11.4,30,5,43.3,5,50
@@ -152,6 +153,63 @@ stories.add('using D3.js', () => {
           });
         });
       }
+    }
+
+    render() {
+      return (
+        <svg id="infinity" width="300" height="200" viewBox="0 0 100 100">
+          <path fill="none" d={data}></path>
+        </svg>
+      );
+    }
+  }
+
+  return <RenderComponent />;
+});
+
+stories.add('using refactor', () => {
+  const data = text('Path "d"', samplePathData);
+
+  class RenderComponent extends React.Component {
+    componentDidMount() {
+      // Please ignore any React stuff... this works with any Javascript project and is NOT a React component
+      // React is used here in Storybook just to get a demo running. :)
+      const margin = { top: 0, right: 0, bottom: 0, left: 0 },
+        width = 600 - margin.left - margin.right,
+        height = 300 - margin.top - margin.bottom,
+        colors = d3.schemeCategory10,
+        pts = [],
+        numPts = 5;
+
+      for (var i = 0; i < numPts; i++) {
+        pts.push([i * (width / numPts), 50]);
+        pts.push([i * (width / numPts), height - 50]);
+        pts.push([i * (width / numPts) + 50, height - 50]);
+        pts.push([i * (width / numPts) + 50, 50]);
+      }
+
+      const svg = d3
+          .select('svg')
+          .attr('width', width + margin.left + margin.right)
+          .attr('height', height + margin.top + margin.bottom),
+        g = svg
+          .append('g')
+          .attr(
+            'transform',
+            'translate(' + margin.left + ',' + margin.top + ')'
+          ),
+        line = svg
+          .select('path')
+          .attr('fill', 'none')
+          .attr('stroke', '#999')
+          .attr('class', 'hidden init')
+          .attr('stroke-width', 2),
+        p = line.node(),
+        sampleInterval = 0.25,
+        pieces = splitPath(p, sampleInterval);
+
+      // drawPoints(pieces, g, colors);
+      drawSegments(pieces, g, colors);
     }
 
     render() {
