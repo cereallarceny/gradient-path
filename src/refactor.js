@@ -1,49 +1,104 @@
 import * as d3 from 'd3';
 
-export const splitPath = (p, sampleInterval) => {
-  const pLength = p.getTotalLength(),
-    numPieces = 10,
-    pieceSizes = [],
-    pieces = [];
+export const getNewSamples = (path, numSegments, numSamplesPerSegment) => {
+  const pathLength = path.getTotalLength(),
+    totalSamples = numSegments * numSamplesPerSegment,
+    allSamples = [],
+    allSegments = [];
 
-  let cumu = 0;
+  for (let sample = 0; sample <= totalSamples; sample++) {
+    const progress = sample / totalSamples;
+    const { x, y } = path.getPointAtLength(progress * pathLength);
 
-  for (let i = 0; i < numPieces; i++) {
-    pieceSizes.push({ i, size: Math.floor(Math.random() * 20) + 5 });
+    allSamples.push({
+      x,
+      y,
+      progress
+    });
   }
 
-  const size = pieceSizes.reduce((a, b) => {
-      return a + b.size;
-    }, 0),
-    pieceSize = pLength / size;
+  for (let segment = 0; segment < numSegments; segment++) {
+    const currentStart = segment * numSamplesPerSegment;
+    const nextStart = currentStart + numSamplesPerSegment;
+    const segments = [];
 
-  pieceSizes.forEach((x, j) => {
-    const segs = [];
-
-    for (let i = 0; i <= x.size + sampleInterval; i += sampleInterval) {
-      const pt = p.getPointAtLength(i * pieceSize + cumu * pieceSize);
-
-      segs.push([pt.x, pt.y]);
+    for (let samInSeg = 0; samInSeg < numSamplesPerSegment; samInSeg++) {
+      segments.push(allSamples[currentStart + samInSeg]);
     }
 
-    const angle =
-      (Math.atan2(segs[1][1] - segs[0][1], segs[1][0] - segs[0][0]) * 180) /
-      Math.PI;
+    segments.push(allSamples[nextStart]);
 
-    // TODO: Angle doesn't do anything...
-    pieces.push({ id: j, segs, angle });
+    allSegments.push(segments);
+  }
 
-    cumu += x.size;
-  });
-
-  return pieces;
+  return allSegments;
 };
+
+// const getSamples = (path, precision) => {
+//   const pathLength = path.getTotalLength(),
+//     samples = [];
+
+//   samples.push(0);
+
+//   let i = 0;
+//   while ((i += precision) < pathLength) samples.push(i);
+
+//   samples.push(pathLength);
+
+//   return samples.map(t => {
+//     const { x, y } = path.getPointAtLength(t),
+//       a = [x, y];
+
+//     a.color = t / pathLength;
+
+//     return a;
+//   });
+// };
+
+// export const splitPath = (p, sampleInterval) => {
+//   const pLength = p.getTotalLength(),
+//     numPieces = 10,
+//     pieceSizes = [],
+//     pieces = [];
+
+//   let cumu = 0;
+
+//   for (let i = 0; i < numPieces; i++) {
+//     pieceSizes.push({ i, size: Math.floor(Math.random() * 20) + 5 });
+//   }
+
+//   const size = pieceSizes.reduce((a, b) => {
+//       return a + b.size;
+//     }, 0),
+//     pieceSize = pLength / size;
+
+//   pieceSizes.forEach((x, j) => {
+//     const segs = [];
+
+//     for (let i = 0; i <= x.size + sampleInterval; i += sampleInterval) {
+//       const pt = p.getPointAtLength(i * pieceSize + cumu * pieceSize);
+
+//       segs.push([pt.x, pt.y]);
+//     }
+
+//     const angle =
+//       (Math.atan2(segs[1][1] - segs[0][1], segs[1][0] - segs[0][0]) * 180) /
+//       Math.PI;
+
+//     // TODO: Angle doesn't do anything...
+//     pieces.push({ id: j, segs, angle });
+
+//     cumu += x.size;
+//   });
+
+//   return pieces;
+// };
 
 export const drawSegments = (pieces, g, colors) => {
   const lineFunc = d3
     .line()
-    .x(d => d[0])
-    .y(d => d[1]);
+    .x(d => d.x)
+    .y(d => d.y);
 
   g.selectAll('path.piece')
     .data(pieces)
@@ -52,27 +107,25 @@ export const drawSegments = (pieces, g, colors) => {
     .attr('fill', 'none')
     .attr('stroke-width', 12)
     .attr('class', 'piece')
-    .attr('d', d => lineFunc(d.segs))
+    .attr('d', lineFunc)
     .attr('stroke', (d, i) => colors[i]);
 };
 
 export const drawPoints = (pieces, g, colors) => {
-  const points = [];
-
-  pieces.forEach(x => {
-    x.segs.forEach((seg, i) => {
-      if (i > 0 && i % 2 === 0) {
-        points.push({ id: x.id, seg });
-      }
-    });
-  });
-
   g.selectAll('circle')
-    .data(points)
+    .data(
+      pieces
+        .map((segment, i) => {
+          return segment.map(sample => {
+            return { ...sample, id: i };
+          });
+        })
+        .flat()
+    )
     .enter()
     .append('circle')
-    .attr('cx', d => d.seg[0])
-    .attr('cy', d => d.seg[1])
+    .attr('cx', d => d.x)
+    .attr('cy', d => d.y)
     .style('fill', d => colors[d.id])
     .attr('r', 0)
     .transition()

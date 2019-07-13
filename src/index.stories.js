@@ -5,7 +5,7 @@ import { withKnobs, number, boolean, text } from '@storybook/addon-knobs';
 import * as d3 from 'd3';
 
 import gradientPath, { getData, getPathPoints, getPathData } from './index';
-import { splitPath, drawPoints, drawSegments } from './refactor';
+import { splitPath, getNewSamples, drawPoints, drawSegments } from './refactor';
 
 const samplePathData = `M24.3,30
 C11.4,30,5,43.3,5,50
@@ -205,8 +205,7 @@ stories.add('using refactor', () => {
           .attr('class', 'hidden init')
           .attr('stroke-width', 2),
         p = line.node(),
-        sampleInterval = 0.25,
-        pieces = splitPath(p, sampleInterval);
+        pieces = getNewSamples(p, 40, 10);
 
       // drawPoints(pieces, g, colors);
       drawSegments(pieces, g, colors);
