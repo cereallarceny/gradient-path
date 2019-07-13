@@ -5,7 +5,7 @@ import { withKnobs, number, boolean, text } from '@storybook/addon-knobs';
 import * as d3 from 'd3';
 
 import gradientPath, { getData, getPathPoints, getPathData } from './index';
-import { splitPath, getNewSamples, drawPoints, drawSegments } from './refactor';
+import { getData as getDataNew, flatten } from './refactor';
 
 const samplePathData = `M24.3,30
 C11.4,30,5,43.3,5,50
@@ -112,7 +112,6 @@ stories.add('using D3.js', () => {
       // React is used here in Storybook just to get a demo running. :)
       const color = d3.interpolateRainbow;
       const path = d3.select('path').remove();
-
       const data = getData(path.node(), precision);
 
       d3.select('svg')
@@ -168,6 +167,8 @@ stories.add('using D3.js', () => {
 });
 
 stories.add('using refactor', () => {
+  const debug = boolean('Debug', false);
+
   const data = text('Path "d"', samplePathData);
 
   const size = number('Thickness', 5, {
@@ -191,7 +192,7 @@ stories.add('using refactor', () => {
     step: 1
   });
 
-  const shouldRound = boolean('Should round precision', false);
+  const shouldRound = boolean('Trim decimal places?', false);
 
   const decimalPlaces = shouldRound
     ? number('Decimal places', 3, {
@@ -206,32 +207,105 @@ stories.add('using refactor', () => {
     componentDidMount() {
       // Please ignore any React stuff... this works with any Javascript project and is NOT a React component
       // React is used here in Storybook just to get a demo running. :)
-      const margin = { top: 0, right: 0, bottom: 0, left: 0 },
-        width = 600 - margin.left - margin.right,
-        height = 300 - margin.top - margin.bottom,
-        colors = d3.interpolateRainbow;
+      if (!debug) {
+        // gradientPath({
+        //   path: document.querySelector('#infinity path'),
+        //   stops: [
+        //     { color: '#E9A36C', pos: 0 },
+        //     { color: '#965167', pos: 0.25 },
+        //     { color: '#231F3C', pos: 0.5 },
+        //     { color: '#965167', pos: 0.75 },
+        //     { color: '#E9A36C', pos: 1 }
+        //   ]
+        // });
+      } else {
+        console.log('DO THE DEBUG CIRCLES');
+      }
+    }
 
-      const svg = d3
-          .select('svg')
-          .attr('width', width + margin.left + margin.right)
-          .attr('height', height + margin.top + margin.bottom),
-        g = svg
-          .append('g')
-          .attr(
-            'transform',
-            'translate(' + margin.left + ',' + margin.top + ')'
-          ),
-        line = svg
-          .select('path')
+    render() {
+      return (
+        <svg id="infinity" width="300" height="200" viewBox="0 0 100 100">
+          <path fill="none" d={data}></path>
+        </svg>
+      );
+    }
+  }
+
+  return <RenderComponent />;
+});
+
+stories.add('using refactor (d3.js)', () => {
+  const debug = boolean('Debug', false);
+
+  const data = text('Path "d"', samplePathData);
+
+  const size = number('Thickness', 5, {
+    range: true,
+    min: 1,
+    max: 50,
+    step: 1
+  });
+
+  const segments = number('Number of segments', 100, {
+    range: true,
+    min: 10,
+    max: 600,
+    step: 10
+  });
+
+  const samplesPerSegment = number('Samples per segment', 4, {
+    range: true,
+    min: 1,
+    max: 40,
+    step: 1
+  });
+
+  const shouldRound = boolean('Trim decimal places?', false);
+
+  const decimalPlaces = shouldRound
+    ? number('Decimal places', 3, {
+        range: true,
+        min: 0,
+        max: 10,
+        step: 1
+      })
+    : null;
+
+  class RenderComponent extends React.Component {
+    componentDidMount() {
+      // Please ignore any React stuff... this works with any Javascript project and is NOT a React component
+      // React is used here in Storybook just to get a demo running. :)
+      const colors = d3.interpolateRainbow;
+      const path = d3.select('path').remove();
+      const data = getDataNew(path, segments, samplesPerSegment, decimalPlaces);
+
+      if (!debug) {
+        const lineFunc = d3
+          .line()
+          .x(d => d.x)
+          .y(d => d.y);
+
+        d3.select('svg')
+          .selectAll('path')
+          .data(data)
+          .enter()
+          .append('path')
           .attr('fill', 'none')
-          .attr('stroke', '#999')
-          .attr('class', 'hidden init')
-          .attr('stroke-width', 2),
-        p = line.node(),
-        pieces = getNewSamples(p, segments, samplesPerSegment, decimalPlaces);
-
-      // drawPoints(pieces, g, colors, size);
-      drawSegments(pieces, g, colors, size);
+          .attr('stroke-width', size)
+          .attr('d', lineFunc)
+          .attr('stroke', d => colors(d[(d.length / 2) | 0].progress));
+      } else {
+        d3.select('svg')
+          .selectAll('circle')
+          .data(flatten(data))
+          .enter()
+          .append('circle')
+          .attr('cx', d => d.x)
+          .attr('cy', d => d.y)
+          .style('fill', d => colors(d.progress))
+          .attr('r', size / 2);
+      }
     }
 
     render() {
