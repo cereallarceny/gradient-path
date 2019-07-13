@@ -1,6 +1,11 @@
 import * as d3 from 'd3';
 
-export const getNewSamples = (path, numSegments, numSamplesPerSegment) => {
+export const getNewSamples = (
+  path,
+  numSegments,
+  numSamplesPerSegment,
+  accuracy
+) => {
   const pathLength = path.getTotalLength(),
     totalSamples = numSegments * numSamplesPerSegment,
     allSamples = [],
@@ -8,7 +13,12 @@ export const getNewSamples = (path, numSegments, numSamplesPerSegment) => {
 
   for (let sample = 0; sample <= totalSamples; sample++) {
     const progress = sample / totalSamples;
-    const { x, y } = path.getPointAtLength(progress * pathLength);
+    let { x, y } = path.getPointAtLength(progress * pathLength);
+
+    if (accuracy) {
+      x = x.toFixed(accuracy);
+      y = y.toFixed(accuracy);
+    }
 
     allSamples.push({
       x,
@@ -34,67 +44,7 @@ export const getNewSamples = (path, numSegments, numSamplesPerSegment) => {
   return allSegments;
 };
 
-// const getSamples = (path, precision) => {
-//   const pathLength = path.getTotalLength(),
-//     samples = [];
-
-//   samples.push(0);
-
-//   let i = 0;
-//   while ((i += precision) < pathLength) samples.push(i);
-
-//   samples.push(pathLength);
-
-//   return samples.map(t => {
-//     const { x, y } = path.getPointAtLength(t),
-//       a = [x, y];
-
-//     a.color = t / pathLength;
-
-//     return a;
-//   });
-// };
-
-// export const splitPath = (p, sampleInterval) => {
-//   const pLength = p.getTotalLength(),
-//     numPieces = 10,
-//     pieceSizes = [],
-//     pieces = [];
-
-//   let cumu = 0;
-
-//   for (let i = 0; i < numPieces; i++) {
-//     pieceSizes.push({ i, size: Math.floor(Math.random() * 20) + 5 });
-//   }
-
-//   const size = pieceSizes.reduce((a, b) => {
-//       return a + b.size;
-//     }, 0),
-//     pieceSize = pLength / size;
-
-//   pieceSizes.forEach((x, j) => {
-//     const segs = [];
-
-//     for (let i = 0; i <= x.size + sampleInterval; i += sampleInterval) {
-//       const pt = p.getPointAtLength(i * pieceSize + cumu * pieceSize);
-
-//       segs.push([pt.x, pt.y]);
-//     }
-
-//     const angle =
-//       (Math.atan2(segs[1][1] - segs[0][1], segs[1][0] - segs[0][0]) * 180) /
-//       Math.PI;
-
-//     // TODO: Angle doesn't do anything...
-//     pieces.push({ id: j, segs, angle });
-
-//     cumu += x.size;
-//   });
-
-//   return pieces;
-// };
-
-export const drawSegments = (pieces, g, colors) => {
+export const drawSegments = (pieces, g, colors, size) => {
   const lineFunc = d3
     .line()
     .x(d => d.x)
@@ -105,13 +55,13 @@ export const drawSegments = (pieces, g, colors) => {
     .enter()
     .append('path')
     .attr('fill', 'none')
-    .attr('stroke-width', 12)
+    .attr('stroke-width', size)
     .attr('class', 'piece')
     .attr('d', lineFunc)
-    .attr('stroke', (d, i) => colors[i]);
+    .attr('stroke', d => colors(d[(d.length / 2) | 0].progress));
 };
 
-export const drawPoints = (pieces, g, colors) => {
+export const drawPoints = (pieces, g, colors, size) => {
   g.selectAll('circle')
     .data(
       pieces
@@ -126,10 +76,10 @@ export const drawPoints = (pieces, g, colors) => {
     .append('circle')
     .attr('cx', d => d.x)
     .attr('cy', d => d.y)
-    .style('fill', d => colors[d.id])
+    .style('fill', d => colors(d.progress))
     .attr('r', 0)
     .transition()
     .duration(0)
     .delay((d, i) => i * 10)
-    .attr('r', 2);
+    .attr('r', size / 2);
 };

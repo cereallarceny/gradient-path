@@ -170,6 +170,38 @@ stories.add('using D3.js', () => {
 stories.add('using refactor', () => {
   const data = text('Path "d"', samplePathData);
 
+  const size = number('Thickness', 5, {
+    range: true,
+    min: 1,
+    max: 50,
+    step: 1
+  });
+
+  const segments = number('Number of segments', 100, {
+    range: true,
+    min: 10,
+    max: 600,
+    step: 10
+  });
+
+  const samplesPerSegment = number('Samples per segment', 4, {
+    range: true,
+    min: 1,
+    max: 40,
+    step: 1
+  });
+
+  const shouldRound = boolean('Should round precision', false);
+
+  const decimalPlaces = shouldRound
+    ? number('Decimal places', 3, {
+        range: true,
+        min: 0,
+        max: 10,
+        step: 1
+      })
+    : null;
+
   class RenderComponent extends React.Component {
     componentDidMount() {
       // Please ignore any React stuff... this works with any Javascript project and is NOT a React component
@@ -177,16 +209,7 @@ stories.add('using refactor', () => {
       const margin = { top: 0, right: 0, bottom: 0, left: 0 },
         width = 600 - margin.left - margin.right,
         height = 300 - margin.top - margin.bottom,
-        colors = d3.schemeCategory10,
-        pts = [],
-        numPts = 5;
-
-      for (var i = 0; i < numPts; i++) {
-        pts.push([i * (width / numPts), 50]);
-        pts.push([i * (width / numPts), height - 50]);
-        pts.push([i * (width / numPts) + 50, height - 50]);
-        pts.push([i * (width / numPts) + 50, 50]);
-      }
+        colors = d3.interpolateRainbow;
 
       const svg = d3
           .select('svg')
@@ -205,10 +228,10 @@ stories.add('using refactor', () => {
           .attr('class', 'hidden init')
           .attr('stroke-width', 2),
         p = line.node(),
-        pieces = getNewSamples(p, 40, 10);
+        pieces = getNewSamples(p, segments, samplesPerSegment, decimalPlaces);
 
-      // drawPoints(pieces, g, colors);
-      drawSegments(pieces, g, colors);
+      // drawPoints(pieces, g, colors, size);
+      drawSegments(pieces, g, colors, size);
     }
 
     render() {
