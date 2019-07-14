@@ -5,7 +5,7 @@ import { withKnobs, number, boolean, text } from '@storybook/addon-knobs';
 import * as d3 from 'd3';
 
 import gradientPath, { getData, getPathPoints, getPathData } from './index';
-import { getData as getDataNew, flatten } from './refactor';
+import gradientPathNew, { getData as getDataNew, flatten } from './refactor';
 
 const samplePathData = `M24.3,30
 C11.4,30,5,43.3,5,50
@@ -171,7 +171,7 @@ stories.add('using refactor', () => {
 
   const data = text('Path "d"', samplePathData);
 
-  const size = number('Thickness', 5, {
+  const width = number('Width', 5, {
     range: true,
     min: 1,
     max: 50,
@@ -185,17 +185,17 @@ stories.add('using refactor', () => {
     step: 10
   });
 
-  const samplesPerSegment = number('Samples per segment', 4, {
+  const samples = number('Samples per segment', 4, {
     range: true,
     min: 1,
     max: 40,
     step: 1
   });
 
-  const shouldRound = boolean('Trim decimal places?', false);
+  const shouldRound = boolean('Should trim precision?', false);
 
-  const decimalPlaces = shouldRound
-    ? number('Decimal places', 3, {
+  const precision = shouldRound
+    ? number('Decimal precision', 3, {
         range: true,
         min: 0,
         max: 10,
@@ -208,16 +208,21 @@ stories.add('using refactor', () => {
       // Please ignore any React stuff... this works with any Javascript project and is NOT a React component
       // React is used here in Storybook just to get a demo running. :)
       if (!debug) {
-        // gradientPath({
-        //   path: document.querySelector('#infinity path'),
-        //   stops: [
-        //     { color: '#E9A36C', pos: 0 },
-        //     { color: '#965167', pos: 0.25 },
-        //     { color: '#231F3C', pos: 0.5 },
-        //     { color: '#965167', pos: 0.75 },
-        //     { color: '#E9A36C', pos: 1 }
-        //   ]
-        // });
+        gradientPathNew({
+          path: document.querySelector('#infinity path'),
+          colors: [
+            { color: '#E9A36C', pos: 0 },
+            { color: '#965167', pos: 0.25 },
+            { color: '#231F3C', pos: 0.5 },
+            { color: '#965167', pos: 0.75 },
+            { color: '#E9A36C', pos: 1 }
+          ],
+          width,
+          segments,
+          samples,
+          precision,
+          debug
+        });
       } else {
         console.log('DO THE DEBUG CIRCLES');
       }
@@ -240,7 +245,7 @@ stories.add('using refactor (d3.js)', () => {
 
   const data = text('Path "d"', samplePathData);
 
-  const size = number('Thickness', 5, {
+  const width = number('Width', 5, {
     range: true,
     min: 1,
     max: 50,
@@ -254,17 +259,17 @@ stories.add('using refactor (d3.js)', () => {
     step: 10
   });
 
-  const samplesPerSegment = number('Samples per segment', 4, {
+  const samples = number('Samples per segment', 4, {
     range: true,
     min: 1,
     max: 40,
     step: 1
   });
 
-  const shouldRound = boolean('Trim decimal places?', false);
+  const shouldRound = boolean('Should trim precision?', false);
 
-  const decimalPlaces = shouldRound
-    ? number('Decimal places', 3, {
+  const precision = shouldRound
+    ? number('Decimal precision', 3, {
         range: true,
         min: 0,
         max: 10,
@@ -278,7 +283,7 @@ stories.add('using refactor (d3.js)', () => {
       // React is used here in Storybook just to get a demo running. :)
       const colors = d3.interpolateRainbow;
       const path = d3.select('path').remove();
-      const data = getDataNew(path, segments, samplesPerSegment, decimalPlaces);
+      const data = getDataNew(path, segments, samples, precision);
 
       if (!debug) {
         const lineFunc = d3
@@ -292,7 +297,7 @@ stories.add('using refactor (d3.js)', () => {
           .enter()
           .append('path')
           .attr('fill', 'none')
-          .attr('stroke-width', size)
+          .attr('stroke-width', width)
           .attr('d', lineFunc)
           .attr('stroke', d => colors(d[(d.length / 2) | 0].progress));
       } else {
@@ -304,7 +309,7 @@ stories.add('using refactor (d3.js)', () => {
           .attr('cx', d => d.x)
           .attr('cy', d => d.y)
           .style('fill', d => colors(d.progress))
-          .attr('r', size / 2);
+          .attr('r', width / 2);
       }
     }
 
