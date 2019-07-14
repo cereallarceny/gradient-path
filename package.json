@@ -68,9 +68,11 @@
     "rollup-plugin-peer-deps-external": "^2.2.0"
   },
   "dependencies": {
+    "svg-points": "^6.0.1",
     "tinygradient": "^1.0.0"
   },
   "peerDependencies": {
+    "svg-points": ">=6.0.1",
     "tinygradient": ">=1.0.0"
   }
 }

@@ -1,4 +1,5 @@
 import tinygradient from 'tinygradient';
+import { toPath } from 'svg-points';
 
 export const getData = (path, numSegments, numSamplesPerSegment, precision) => {
   // If the path being passed isn't a DOM node already, make it one
@@ -94,25 +95,21 @@ export default ({
   console.log('WIDTH', width);
   console.log('DEBUG', debug);
 
-  // data.forEach(quad => {
-  //   const allPoints = getPathPoints(quad, width);
-  //   const color = gradient.rgbAt(quad.color);
-  //   const pathStyles = [];
+  // TODO: Add debug and also perhaps consider adding a "fill vs. stroke" mode
+  data.forEach(segment => {
+    const d = toPath(segment),
+      middleSample = segment[(segment.length / 2) | 0],
+      stroke = gradient.rgbAt(middleSample.progress);
 
-  //   pathStyles.push(`fill: ${color};`);
+    const segmentPath = svgElem('path', {
+      class: 'quad-path',
+      d,
+      stroke,
+      'stroke-width': width
+    });
 
-  //   if (stroke) {
-  //     pathStyles.push(`stroke: ${color};`);
-  //     pathStyles.push(`stroke-width: ${stroke};`);
-  //   }
-
-  //   const quadPath = svgElem('path', {
-  //     class: 'quad-path',
-  //     d: getPathData(allPoints),
-  //     style: pathStyles.join('')
-  //   });
-
-  //   group.appendChild(quadPath);
+    group.appendChild(segmentPath);
+  });
 
   //   if (debug) {
   //     quad.forEach(vertex => {

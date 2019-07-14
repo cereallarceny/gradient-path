@@ -171,7 +171,7 @@ stories.add('using refactor', () => {
 
   const data = text('Path "d"', samplePathData);
 
-  const width = number('Width', 5, {
+  const width = number('Width', 10, {
     range: true,
     min: 1,
     max: 50,
@@ -245,7 +245,7 @@ stories.add('using refactor (d3.js)', () => {
 
   const data = text('Path "d"', samplePathData);
 
-  const width = number('Width', 5, {
+  const width = number('Width', 10, {
     range: true,
     min: 1,
     max: 50,
