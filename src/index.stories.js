@@ -1,4 +1,5 @@
-// Please ignore any React stuff... this works with any Javascript project and is NOT a React component
+// ----- IMPORTANT NOTE -----
+// Please ignore any React code... this library works with any Javascript project and is NOT a React component
 // React is used here in Storybook just to get a demo running. :)
 
 import React from 'react';
@@ -54,54 +55,82 @@ const saveSvg = (svg, name) => {
   }, 0);
 };
 
-const stories = storiesOf('GradientPath', module);
+const createDataKnobs = config => {
+  const data = text('Path "d"', samplePathData, 'Data');
+
+  const segments = number(
+    'Number of segments',
+    config && config.segments ? config.segments : 100,
+    {
+      range: true,
+      min: 10,
+      max: 600,
+      step: 10
+    },
+    'Data'
+  );
+
+  const samples = number(
+    'Samples per segment',
+    5,
+    {
+      range: true,
+      min: 1,
+      max: 40,
+      step: 1
+    },
+    'Data'
+  );
+
+  const shouldRound = boolean('Should trim precision?', true, 'Data');
+  const precision = shouldRound
+    ? number(
+        'Decimal precision',
+        3,
+        {
+          range: true,
+          min: 0,
+          max: 10,
+          step: 1
+        },
+        'Data'
+      )
+    : null;
+
+  button(
+    'Download as SVG',
+    () => {
+      saveSvg(document.querySelector('#gradient-path'), 'gradient-path.svg');
+    },
+    'Main'
+  );
+
+  return { data, segments, samples, precision };
+};
+
+const stories = storiesOf('Gradient Path', module);
 
 stories.addDecorator(withKnobs);
 
 stories.add('with path fill', () => {
-  const data = text('Path "d"', samplePathData);
+  const width = number(
+    'Width',
+    10,
+    {
+      range: true,
+      min: 1,
+      max: 50,
+      step: 1
+    },
+    'Main'
+  );
 
-  const width = number('Width', 10, {
-    range: true,
-    min: 1,
-    max: 50,
-    step: 1
-  });
-
-  const segments = number('Number of segments', 100, {
-    range: true,
-    min: 10,
-    max: 600,
-    step: 10
-  });
-
-  const samples = number('Samples per segment', 4, {
-    range: true,
-    min: 1,
-    max: 40,
-    step: 1
-  });
-
-  const shouldRound = boolean('Should trim precision?', true);
-  const precision = shouldRound
-    ? number('Decimal precision', 3, {
-        range: true,
-        min: 0,
-        max: 10,
-        step: 1
-      })
-    : null;
-
-  button('Download as SVG', () => {
-    window.open(
-      saveSvg(document.querySelector('#infinity'), 'gradient-path.svg')
-    );
-  });
+  const { data, segments, samples, precision } = createDataKnobs();
 
   class RenderComponent extends React.Component {
     componentDidMount() {
       gradientPath({
-        path: document.querySelector('#infinity path'),
+        path: document.querySelector('#gradient-path path'),
         elements: [
           {
             type: 'path',
@@ -119,7 +148,7 @@ stories.add('with path fill', () => {
 
     render() {
       return (
-        <svg id="infinity" width="300" height="200" viewBox="0 0 100 100">
+        <svg id="gradient-path" width="300" height="200" viewBox="0 0 100 100">
           <path fill="none" d={data}></path>
         </svg>
       );
@@ -130,49 +159,24 @@ stories.add('with path fill', () => {
 });
 
 stories.add('with path stroke', () => {
-  const data = text('Path "d"', samplePathData);
+  const width = number(
+    'Width',
+    10,
+    {
+      range: true,
+      min: 1,
+      max: 50,
+      step: 1
+    },
+    'Main'
+  );
 
-  const width = number('Width', 10, {
-    range: true,
-    min: 1,
-    max: 50,
-    step: 1
-  });
-
-  const segments = number('Number of segments', 100, {
-    range: true,
-    min: 10,
-    max: 600,
-    step: 10
-  });
-
-  const samples = number('Samples per segment', 4, {
-    range: true,
-    min: 1,
-    max: 40,
-    step: 1
-  });
-
-  const shouldRound = boolean('Should trim precision?', true);
-  const precision = shouldRound
-    ? number('Decimal precision', 3, {
-        range: true,
-        min: 0,
-        max: 10,
-        step: 1
-      })
-    : null;
-
-  button('Download as SVG', () => {
-    window.open(
-      saveSvg(document.querySelector('#infinity'), 'gradient-path.svg')
-    );
-  });
+  const { data, segments, samples, precision } = createDataKnobs();
 
   class RenderComponent extends React.Component {
     componentDidMount() {
       gradientPath({
-        path: document.querySelector('#infinity path'),
+        path: document.querySelector('#gradient-path path'),
         elements: [
           {
             type: 'path',
@@ -190,7 +194,7 @@ stories.add('with path stroke', () => {
 
     render() {
       return (
-        <svg id="infinity" width="300" height="200" viewBox="0 0 100 100">
+        <svg id="gradient-path" width="300" height="200" viewBox="0 0 100 100">
           <path fill="none" d={data}></path>
         </svg>
       );
@@ -201,58 +205,40 @@ stories.add('with path stroke', () => {
 });
 
 stories.add('with circles (fill & stroke)', () => {
-  const data = text('Path "d"', samplePathData);
+  const width = number(
+    'Width',
+    5,
+    {
+      range: true,
+      min: 1,
+      max: 50,
+      step: 1
+    },
+    'Main'
+  );
 
-  const width = number('Width', 5, {
-    range: true,
-    min: 1,
-    max: 50,
-    step: 1
-  });
+  const strokeColor = text('Stroke color', '#eee', 'Main');
 
-  const strokeColor = text('Stroke color', '#eee');
+  const strokeWidth = number(
+    'Stroke width',
+    1,
+    {
+      range: true,
+      min: 0,
+      max: 10,
+      step: 1
+    },
+    'Main'
+  );
 
-  const strokeWidth = number('Stroke width', 1, {
-    range: true,
-    min: 0,
-    max: 10,
-    step: 1
-  });
-
-  const segments = number('Number of segments', 20, {
-    range: true,
-    min: 10,
-    max: 600,
-    step: 10
-  });
-
-  const samples = number('Samples per segment', 2, {
-    range: true,
-    min: 1,
-    max: 40,
-    step: 1
-  });
-
-  const shouldRound = boolean('Should trim precision?', true);
-  const precision = shouldRound
-    ? number('Decimal precision', 3, {
-        range: true,
-        min: 0,
-        max: 10,
-        step: 1
-      })
-    : null;
-
-  button('Download as SVG', () => {
-    window.open(
-      saveSvg(document.querySelector('#infinity'), 'gradient-path.svg')
-    );
+  const { data, segments, samples, precision } = createDataKnobs({
+    segments: 10
   });
 
   class RenderComponent extends React.Component {
     componentDidMount() {
       gradientPath({
-        path: document.querySelector('#infinity path'),
+        path: document.querySelector('#gradient-path path'),
         elements: [
           {
             type: 'circle',
@@ -272,7 +258,7 @@ stories.add('with circles (fill & stroke)', () => {
 
     render() {
       return (
-        <svg id="infinity" width="300" height="200" viewBox="0 0 100 100">
+        <svg id="gradient-path" width="300" height="200" viewBox="0 0 100 100">
           <path fill="none" d={data}></path>
         </svg>
       );
@@ -283,58 +269,40 @@ stories.add('with circles (fill & stroke)', () => {
 });
 
 stories.add('with multiple elements', () => {
-  const data = text('Path "d"', samplePathData);
+  const width = number(
+    'Width',
+    10,
+    {
+      range: true,
+      min: 1,
+      max: 50,
+      step: 1
+    },
+    'Main'
+  );
 
-  const width = number('Width', 10, {
-    range: true,
-    min: 1,
-    max: 50,
-    step: 1
-  });
+  const circleFill = text('Circle fill', '#eee', 'Main');
 
-  const circleFill = text('Circle fill', '#eee');
+  const circleWidth = number(
+    'Circle width',
+    3,
+    {
+      range: true,
+      min: 0,
+      max: 10,
+      step: 1
+    },
+    'Main'
+  );
 
-  const circleWidth = number('Circle width', 2, {
-    range: true,
-    min: 0,
-    max: 10,
-    step: 1
-  });
-
-  const segments = number('Number of segments', 20, {
-    range: true,
-    min: 10,
-    max: 600,
-    step: 10
-  });
-
-  const samples = number('Samples per segment', 2, {
-    range: true,
-    min: 1,
-    max: 40,
-    step: 1
-  });
-
-  const shouldRound = boolean('Should trim precision?', true);
-  const precision = shouldRound
-    ? number('Decimal precision', 3, {
-        range: true,
-        min: 0,
-        max: 10,
-        step: 1
-      })
-    : null;
-
-  button('Download as SVG', () => {
-    window.open(
-      saveSvg(document.querySelector('#infinity'), 'gradient-path.svg')
-    );
+  const { data, segments, samples, precision } = createDataKnobs({
+    segments: 10
   });
 
   class RenderComponent extends React.Component {
     componentDidMount() {
       gradientPath({
-        path: document.querySelector('#infinity path'),
+        path: document.querySelector('#gradient-path path'),
         elements: [
           {
             type: 'path',
@@ -357,7 +325,7 @@ stories.add('with multiple elements', () => {
 
     render() {
       return (
-        <svg id="infinity" width="300" height="200" viewBox="0 0 100 100">
+        <svg id="gradient-path" width="300" height="200" viewBox="0 0 100 100">
           <path fill="none" d={data}></path>
         </svg>
       );
@@ -368,40 +336,21 @@ stories.add('with multiple elements', () => {
 });
 
 stories.add('using d3.js', () => {
-  const data = text('Path "d"', samplePathData);
+  const width = number(
+    'Width',
+    10,
+    {
+      range: true,
+      min: 1,
+      max: 50,
+      step: 1
+    },
+    'Main'
+  );
 
-  const width = number('Width', 10, {
-    range: true,
-    min: 1,
-    max: 50,
-    step: 1
-  });
+  const element = select('Element', ['path', 'circle'], 'path', 'Main');
 
-  const element = select('Element', ['path', 'circle'], 'path');
-
-  const segments = number('Number of segments', 100, {
-    range: true,
-    min: 10,
-    max: 600,
-    step: 10
-  });
-
-  const samples = number('Samples per segment', 4, {
-    range: true,
-    min: 1,
-    max: 40,
-    step: 1
-  });
-
-  const shouldRound = boolean('Should trim precision?', true);
-  const precision = shouldRound
-    ? number('Decimal precision', 3, {
-        range: true,
-        min: 0,
-        max: 10,
-        step: 1
-      })
-    : null;
+  const { data, segments, samples, precision } = createDataKnobs();
 
   class RenderComponent extends React.Component {
     componentDidMount() {
@@ -439,7 +388,7 @@ stories.add('using d3.js', () => {
 
     render() {
       return (
-        <svg id="infinity" width="300" height="200" viewBox="0 0 100 100">
+        <svg id="gradient-path" width="300" height="200" viewBox="0 0 100 100">
           <path fill="none" d={data}></path>
         </svg>
       );

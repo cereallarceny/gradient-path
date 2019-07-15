@@ -1,21 +1,23 @@
 import { svgElem, styleAttrs } from './_utils';
 import { toPath } from 'svg-points';
 
-export const getData = (
-  path,
-  numSegments,
-  numSamplesPerSegment,
-  precision = 3
-) => {
+// The main data function!
+// Provide an SVG path, the number of segments, number of samples in each segment, and an optional precision
+// This will return an array of segments (length = numSeg), each with an array of samples (length = numSamPerSeg)
+// Each sample contains an "x" and "y" value, as well as a "progress" value indicating it's relative position along the total length of the path
+export const getData = (path, numSeg, numSamPerSeg, precision = 3) => {
   // If the path being passed isn't a DOM node already, make it one
   path =
     path instanceof Element || path instanceof HTMLDocument
       ? path
       : path.node();
 
+  // We decrement the number of samples per segment because when we group them later we will add on the first sample of the following segment
+  numSamPerSeg--;
+
   // Get total length of path, total number of samples, and two blank arrays to hold samples and segments
   const pathLength = path.getTotalLength(),
-    totalSamples = numSegments * numSamplesPerSegment,
+    totalSamples = numSeg * numSamPerSeg,
     allSamples = [],
     allSegments = [];
 
@@ -37,16 +39,15 @@ export const getData = (
     });
   }
 
-  // Out of all the samples gathered, sort them into groups of n+1 size (where n is the numSamplesPerSegment)
-  // If numSegments = 10 and numSamplesPerSegment = 4 then allSegments will be 10 groups of 5 samples
-  // This includes the numSamplesPerSegment plus the next item that will be sampled
+  // Out of all the samples gathered, sort them into groups of length = numSamPerSeg
+  // Each group includes the samples of the current segment, with the last sample being first sample from the next group
   // This "nextStart" becomes the "currentStart" every time segment is interated
-  for (let segment = 0; segment < numSegments; segment++) {
-    const currentStart = segment * numSamplesPerSegment;
-    const nextStart = currentStart + numSamplesPerSegment;
+  for (let segment = 0; segment < numSeg; segment++) {
+    const currentStart = segment * numSamPerSeg;
+    const nextStart = currentStart + numSamPerSeg;
     const segments = [];
 
-    for (let samInSeg = 0; samInSeg < numSamplesPerSegment; samInSeg++) {
+    for (let samInSeg = 0; samInSeg < numSamPerSeg; samInSeg++) {
       segments.push(allSamples[currentStart + samInSeg]);
     }
 
@@ -69,6 +70,10 @@ export const flatten = pieces =>
     })
     .flat();
 
+export const getOutline = (data, width) => {
+  console.log(`Outline stroke (width: ${width}) from:`, data);
+};
+
 // TODO: Do width of path
 // TODO: Update D3 example and multiple elements stories to use fill for path
 // TODO: Write new documentation and release new major version
@@ -76,17 +81,24 @@ export default ({ path, elements, data: { segments, samples, precision } }) => {
   const data = getData(path, segments, samples, precision),
     svg = path.closest('svg');
 
+  // Remove the main path once we have the data values
   path.parentNode.removeChild(path);
 
+  // Append a global group so that we don't mess with anything else in the SVG other than the requested path
   const group = svgElem('g', { class: 'gradient-path' });
   svg.appendChild(group);
 
+  // For each element the user wants (path or circle), create them
   elements.forEach(({ type, stroke, strokeWidth, fill, width }) => {
+    // Create a group for each element
     const elemGroup = svgElem('g', { class: `element-${type}` });
     group.appendChild(elemGroup);
 
     if (type === 'path') {
       data.forEach(segment => {
+        console.log(getOutline(segment, width));
+
+        // Create a path for each segment (array of samples) and append it to its elemGroup
         elemGroup.appendChild(
           svgElem('path', {
             class: 'path-segment',
@@ -102,6 +114,7 @@ export default ({ path, elements, data: { segments, samples, precision } }) => {
       });
     } else if (type === 'circle') {
       flatten(data).forEach(sample => {
+        // Create a circle for each sample (because we called "flatten(data)" on the line before) and append it to its elemGroup
         elemGroup.appendChild(
           svgElem('circle', {
             class: 'circle-sample',
