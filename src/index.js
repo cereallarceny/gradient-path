@@ -1,175 +1,116 @@
-import tinygradient from 'tinygradient';
+import { svgElem, styleAttrs } from './_utils';
+import { toPath } from 'svg-points';
 
-// Gets sample points on a path given a precision value and creates quad segments for them
-export const getData = (path, precision) => {
-  // Sample the SVG path uniformly with the specified precision.
-  const getSamples = (path, precision) => {
-    const pathLength = path.getTotalLength(),
-      samples = [];
-
-    samples.push(0);
-
-    let i = 0;
-    while ((i += precision) < pathLength) samples.push(i);
-
-    samples.push(pathLength);
-
-    return samples.map(t => {
-      const { x, y } = path.getPointAtLength(t),
-        a = [x, y];
-
-      a.color = t / pathLength;
-
-      return a;
-    });
-  };
-
-  // Compute quads of adjacent points [p0, p1, p2, p3].
-  const computeQuads = points =>
-    [...Array(points.length - 1).keys()].map(i => {
-      const a = [points[i - 1], points[i], points[i + 1], points[i + 2]];
-
-      a.color = (points[i].color + points[i + 1].color) / 2;
-
-      return a;
-    });
-
-  return computeQuads(getSamples(path, precision));
-};
-
-// Compute stroke outline for segment p12.
-export const getPathPoints = (points, width) => {
-  // Compute unit vector getPerpendicular to p01.
-  const getPerpendicular = (p0, p1) => {
-    const u01x = p0[1] - p1[1];
-    const u01y = p1[0] - p0[0];
-    const u01d = Math.sqrt(u01x * u01x + u01y * u01y);
-
-    return [u01x / u01d, u01y / u01d];
-  };
-
-  // Compute intersection of two infinite lines ab and cd.
-  const getIntersection = (a, b, c, d) => {
-    const x1 = c[0],
-      x3 = a[0],
-      x21 = d[0] - x1,
-      x43 = b[0] - x3,
-      y1 = c[1],
-      y3 = a[1],
-      y21 = d[1] - y1,
-      y43 = b[1] - y3,
-      ua = (x43 * (y1 - y3) - y43 * (x1 - x3)) / (y43 * x21 - x43 * y21);
-
-    return [x1 + ua * x21, y1 + ua * y21];
-  };
-
-  const p0 = points[0],
-    p1 = points[1],
-    p2 = points[2],
-    p3 = points[3],
-    r = width / 2,
-    u12 = getPerpendicular(p1, p2);
-
-  let a = [p1[0] + u12[0] * r, p1[1] + u12[1] * r];
-  let b = [p2[0] + u12[0] * r, p2[1] + u12[1] * r];
-  let c = [p2[0] - u12[0] * r, p2[1] - u12[1] * r];
-  let d = [p1[0] - u12[0] * r, p1[1] - u12[1] * r];
-
-  // Clip ad and dc using average of u01 and u12
-  if (p0) {
-    const u01 = getPerpendicular(p0, p1),
-      e = [p1[0] + u01[0] + u12[0], p1[1] + u01[1] + u12[1]];
-
-    a = getIntersection(p1, e, a, b);
-    d = getIntersection(p1, e, d, c);
-  }
-
-  // Clip ab and dc using average of u12 and u23
-  if (p3) {
-    const u23 = getPerpendicular(p2, p3),
-      e = [p2[0] + u23[0] + u12[0], p2[1] + u23[1] + u12[1]];
-
-    b = getIntersection(p2, e, a, b);
-    c = getIntersection(p2, e, d, c);
-  }
-
-  return [a, b, c, d];
-};
-
-// Creates a data attribute for use on an SVG path given 4 points (a quad)
-export const getPathData = ([a, b, c, d]) => `M${a}L${b} ${c} ${d}Z`;
-
-export default ({
+export const getData = (
   path,
-  stops,
-  width,
-  precision = 1,
-  stroke = false,
-  repeat = false,
-  debug = false
-}) => {
-  const data = getData(path, precision);
-  const gradient = tinygradient(stops);
-  const svg = path.closest('svg');
+  numSegments,
+  numSamplesPerSegment,
+  precision = 3
+) => {
+  // If the path being passed isn't a DOM node already, make it one
+  path =
+    path instanceof Element || path instanceof HTMLDocument
+      ? path
+      : path.node();
+
+  // Get total length of path, total number of samples, and two blank arrays to hold samples and segments
+  const pathLength = path.getTotalLength(),
+    totalSamples = numSegments * numSamplesPerSegment,
+    allSamples = [],
+    allSegments = [];
+
+  // For the number of total samples, get the x, y, and progress values for each sample along the path
+  for (let sample = 0; sample <= totalSamples; sample++) {
+    const progress = sample / totalSamples;
+    let { x, y } = path.getPointAtLength(progress * pathLength);
+
+    // If the user asks to round our x and y values, do so
+    if (precision) {
+      x = x.toFixed(precision);
+      y = y.toFixed(precision);
+    }
+
+    allSamples.push({
+      x,
+      y,
+      progress
+    });
+  }
+
+  // Out of all the samples gathered, sort them into groups of n+1 size (where n is the numSamplesPerSegment)
+  // If numSegments = 10 and numSamplesPerSegment = 4 then allSegments will be 10 groups of 5 samples
+  // This includes the numSamplesPerSegment plus the next item that will be sampled
+  // This "nextStart" becomes the "currentStart" every time segment is interated
+  for (let segment = 0; segment < numSegments; segment++) {
+    const currentStart = segment * numSamplesPerSegment;
+    const nextStart = currentStart + numSamplesPerSegment;
+    const segments = [];
+
+    for (let samInSeg = 0; samInSeg < numSamplesPerSegment; samInSeg++) {
+      segments.push(allSamples[currentStart + samInSeg]);
+    }
+
+    segments.push(allSamples[nextStart]);
+
+    allSegments.push(segments);
+  }
+
+  return allSegments;
+};
+
+// Flatten all values, but preserve the id (each sample in a segment group has the same id)
+// This is helpful for rendering all of samples (as dots in the path, or whatever you'd like)
+export const flatten = pieces =>
+  pieces
+    .map((segment, i) => {
+      return segment.map(sample => {
+        return { ...sample, id: i };
+      });
+    })
+    .flat();
+
+// TODO: Do width of path
+// TODO: Update D3 example and multiple elements stories to use fill for path
+// TODO: Write new documentation and release new major version
+export default ({ path, elements, data: { segments, samples, precision } }) => {
+  const data = getData(path, segments, samples, precision),
+    svg = path.closest('svg');
 
   path.parentNode.removeChild(path);
-
-  const svgElem = (type, attrs) => {
-    let elem = document.createElementNS('http://www.w3.org/2000/svg', type);
-
-    Object.keys(attrs).forEach(attr => elem.setAttribute(attr, attrs[attr]));
-
-    return elem;
-  };
 
   const group = svgElem('g', { class: 'gradient-path' });
   svg.appendChild(group);
 
-  data.forEach(quad => {
-    const allPoints = getPathPoints(quad, width);
-    const color = gradient.rgbAt(quad.color);
-    const pathStyles = [];
+  elements.forEach(({ type, stroke, strokeWidth, fill, width }) => {
+    const elemGroup = svgElem('g', { class: `element-${type}` });
+    group.appendChild(elemGroup);
 
-    pathStyles.push(`fill: ${color};`);
-
-    if (stroke) {
-      pathStyles.push(`stroke: ${color};`);
-      pathStyles.push(`stroke-width: ${stroke};`);
-    }
-
-    const quadPath = svgElem('path', {
-      class: 'quad-path',
-      d: getPathData(allPoints),
-      style: pathStyles.join('')
-    });
-
-    group.appendChild(quadPath);
-
-    if (debug) {
-      quad.forEach(vertex => {
-        if (vertex) {
-          const segmentDot = svgElem('circle', {
-            class: 'segment-dot',
-            cx: vertex[0],
-            cy: vertex[1],
-            fill: '#000',
-            r: 1
-          });
-
-          group.appendChild(segmentDot);
-        }
+    if (type === 'path') {
+      data.forEach(segment => {
+        elemGroup.appendChild(
+          svgElem('path', {
+            class: 'path-segment',
+            d: toPath(segment),
+            ...styleAttrs(
+              fill,
+              stroke,
+              strokeWidth,
+              segment[(segment.length / 2) | 0].progress
+            )
+          })
+        );
       });
-
-      allPoints.forEach(point => {
-        const quadDot = svgElem('circle', {
-          class: 'quad-dot',
-          cx: point[0],
-          cy: point[1],
-          fill: '#f00',
-          r: 1
-        });
-
-        group.appendChild(quadDot);
+    } else if (type === 'circle') {
+      flatten(data).forEach(sample => {
+        elemGroup.appendChild(
+          svgElem('circle', {
+            class: 'circle-sample',
+            cx: sample.x,
+            cy: sample.y,
+            r: width / 2,
+            ...styleAttrs(fill, stroke, strokeWidth, sample.progress)
+          })
+        );
       });
     }
   });
