@@ -1,7 +1,7 @@
 import { addParameters, configure } from '@storybook/react';
 
 addParameters({
-  options: { addonPanelInRight: true }
+  options: { panelPosition: 'right' }
 });
 
 function loadStories() {

@@ -86,7 +86,7 @@ const createDataKnobs = config => {
   const precision = shouldRound
     ? number(
         'Decimal precision',
-        2,
+        1,
         {
           range: true,
           min: 1,

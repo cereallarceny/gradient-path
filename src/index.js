@@ -1,7 +1,7 @@
 import { svgElem, styleAttrs } from './_utils';
 import { toPath } from 'svg-points';
 
-const DEFAULT_PRECISION = 2;
+const DEFAULT_PRECISION = 1;
 
 // The main data function!
 // Provide an SVG path, the number of segments, number of samples in each segment, and an optional precision
@@ -77,17 +77,19 @@ export const flatten = pieces =>
     })
     .flat();
 
-// Given a segment, width, and precision level, outline a path one segment at a time
-export const outlineStroke = (segment, width, precision) => {
+// Given each segment in data, width, and precision level, outline a path one segment at a time
+export const outlineStrokes = (data, width, precision) => {
   // We need to get the points perpendicular to a startPoint, given angle, radius, and precision
   const getPerpPoints = (angle, radius, precision, startPoint) => {
     const p0 = {
         x: Math.sin(angle) * radius + startPoint.x,
-        y: -Math.cos(angle) * radius + startPoint.y
+        y: -Math.cos(angle) * radius + startPoint.y,
+        progress: startPoint.progress
       },
       p1 = {
         x: -Math.sin(angle) * radius + startPoint.x,
-        y: Math.cos(angle) * radius + startPoint.y
+        y: Math.cos(angle) * radius + startPoint.y,
+        progress: startPoint.progress
       };
 
     if (precision) {
@@ -101,34 +103,81 @@ export const outlineStroke = (segment, width, precision) => {
   };
 
   const radius = width / 2,
-    segmentData = [];
+    outlinedData = [];
 
-  // For each sample point and the following sample point (if there is one) compute the angle and then various perpendicular points
-  segment.forEach((sample, i) => {
-    // If we're at the end of the segment and there are no further points
-    if (segment[i + 1] === undefined) return;
+  data.forEach(segment => {
+    const segmentData = [];
+    // For each sample point and the following sample point (if there is one) compute the angle and then various perpendicular points
+    segment.forEach((sample, i) => {
+      // If we're at the end of the segment and there are no further points
+      if (segment[i + 1] === undefined) return;
 
-    const p0 = segment[i], // The current sample point
-      p1 = segment[i + 1], // The next sample point
-      angle = Math.atan2(p1.y - p0.y, p1.x - p0.x), // Perpendicular angle to p0 and p1
-      p0Perps = getPerpPoints(angle, radius, precision, p0), // Get perpedicular points with a distance of radius away from p0
-      p1Perps = getPerpPoints(angle, radius, precision, p1); // Get perpedicular points with a distance of radius away from p1
+      const p0 = segment[i], // The current sample point
+        p1 = segment[i + 1], // The next sample point
+        angle = Math.atan2(p1.y - p0.y, p1.x - p0.x), // Perpendicular angle to p0 and p1
+        p0Perps = getPerpPoints(angle, radius, precision, p0), // Get perpedicular points with a distance of radius away from p0
+        p1Perps = getPerpPoints(angle, radius, precision, p1); // Get perpedicular points with a distance of radius away from p1
 
-    // We only need the p0 perpendenciular points for the first sample
-    if (i === 0) {
-      segmentData.push(...p0Perps);
-    }
+      // We only need the p0 perpendenciular points for the first sample
+      if (i === 0) {
+        segmentData.push(...p0Perps);
+      }
 
-    // Always push the second sample point's perpendicular points
-    segmentData.push(...p1Perps);
+      // Always push the second sample point's perpendicular points
+      segmentData.push(...p1Perps);
+    });
+
+    // segmentData is out of order...
+    // Given a segmentData length of 8, the points need to be rearranged from: 0, 2, 4, 6, 7, 5, 3, 1
+    outlinedData.push([
+      ...segmentData.filter((s, i) => i % 2 === 0),
+      ...segmentData.filter((s, i) => i % 2 === 1).reverse()
+    ]);
   });
 
-  // segmentData is out of order...
-  // Given a segmentData length of 8, the points need to be rearranged from: 0, 2, 4, 6, 7, 5, 3, 1
-  return [
-    ...segmentData.filter((s, i) => i % 2 === 0),
-    ...segmentData.filter((s, i) => i % 2 === 1).reverse()
-  ];
+  return outlinedData;
+};
+
+// Given each segment of data and a precision, find the average join points between adjacent segments and average the values
+export const averageSegmentJoins = (data, precision) => {
+  // Find the average x and y between two points (p0 and p1)
+  const avg = (p0, p1) => ({
+    x: (p0.x + p1.x) / 2,
+    y: (p0.y + p1.y) / 2
+  });
+
+  // Recombine the new x and y positions with all the other keys in the object
+  const combine = (segment, pos, avg) => ({
+    ...segment[pos],
+    x: avg.x,
+    y: avg.y
+  });
+
+  data.forEach((segment, i) => {
+    let curSeg = data[i], // The current segment
+      nextSeg = data[i + 1] ? data[i + 1] : data[0], // The next segment, otherwise, the first segment
+      curMiddle = curSeg.length / 2, // The "middle" item in the current segment
+      nextEnd = nextSeg.length - 1; // The last item in the next segment
+
+    // Average two sets of outlined points to create p0Average and p1Average
+    const p0Average = avg(curSeg[curMiddle - 1], nextSeg[0]),
+      p1Average = avg(curSeg[curMiddle], nextSeg[nextEnd]);
+
+    if (precision) {
+      p0Average.x = +p0Average.x.toFixed(precision);
+      p0Average.y = +p0Average.y.toFixed(precision);
+      p1Average.x = +p1Average.x.toFixed(precision);
+      p1Average.y = +p1Average.y.toFixed(precision);
+    }
+
+    // Replace the previous values
+    curSeg[curMiddle - 1] = combine(curSeg, curMiddle - 1, p0Average);
+    curSeg[curMiddle] = combine(curSeg, curMiddle, p1Average);
+    nextSeg[0] = combine(nextSeg, 0, p0Average);
+    nextSeg[nextEnd] = combine(nextSeg, nextEnd, p1Average);
+  });
+
+  return data;
 };
 
 // The main export, allowing the user the ability to pass any DOM path have have a regenerated group of paths or circles
@@ -154,14 +203,26 @@ export default ({
     group.appendChild(elemGroup);
 
     if (type === 'path') {
-      data.forEach(segment => {
+      let pathData;
+
+      // If we specify a width, we will be filling, so we need to outline the path and then average the join points of the segments
+      if (width) {
+        const outlinedStrokes = outlineStrokes(data, width, precision),
+          averagedSegments = averageSegmentJoins(outlinedStrokes, precision);
+
+        pathData = averagedSegments;
+      }
+      // Otherwise, just use the path and stroke it
+      else {
+        pathData = data;
+      }
+
+      pathData.forEach(segment => {
         // Create a path for each segment (array of samples) and append it to its elemGroup
         elemGroup.appendChild(
           svgElem('path', {
             class: 'path-segment',
-            d: width
-              ? toPath(outlineStroke(segment, width, precision)) // If we specify a width, we will be filling, so we need to outline the path
-              : toPath(segment), // Otherwise, just use the path and stroke it
+            d: toPath(segment),
             ...styleAttrs(
               fill,
               stroke,
