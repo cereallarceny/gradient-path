@@ -20,7 +20,7 @@ export const getData = (
       : path.node();
 
   // We decrement the number of samples per segment because when we group them later we will add on the first sample of the following segment
-  numSamPerSeg--;
+  if (numSamPerSeg > 1) numSamPerSeg--;
 
   // Get total length of path, total number of samples, and two blank arrays to hold samples and segments
   const pathLength = path.getTotalLength(),
