@@ -1,5 +1,4 @@
-import { svgElem, styleAttrs } from './_utils';
-import { toPath } from 'svg-points';
+import { svgElem, styleAttrs, segmentToD } from './_utils';
 
 const DEFAULT_PRECISION = 2;
 
@@ -81,9 +80,9 @@ export const flattenSegments = pieces =>
 // This is helpful for ordering the segment by progress and returning the middle most sample
 // This is to be used to get the color for any path segment
 export const getMiddleSample = segment => {
-  segment.sort((a, b) => a.progress - b.progress);
+  const sortedSegment = [...segment].sort((a, b) => a.progress - b.progress);
 
-  return segment[(segment.length / 2) | 0];
+  return sortedSegment[(sortedSegment.length / 2) | 0];
 };
 
 // Given each segment in data, width, and precision level, outline a path one segment at a time
@@ -231,7 +230,7 @@ export default ({
         elemGroup.appendChild(
           svgElem('path', {
             class: 'path-segment',
-            d: toPath(segment),
+            d: segmentToD(segment),
             ...styleAttrs(
               fill,
               stroke,

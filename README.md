@@ -3,7 +3,7 @@
 A small library to have any gradient follow along any SVG path
 
 - One dependency ([tinygradient](https://github.com/mistic100/tinygradient))
-- 1.1kb gzipped
+- 1.7kb gzipped
 - Use on any SVG `path`
 - **Use with D3.js is supported but completely optional**
 
@@ -15,11 +15,11 @@ A small library to have any gradient follow along any SVG path
 
 ## Installation
 
-Installation instructions depend on whether or not you are using D3.js in your project. If you intend to use D3 alongside gradient-path, then you don't need to install `tinygradient` and `svg-points`. If you're going to use gradient-path standalone within your Javascript project, you must also install those dependencies (but don't worry, all 3 pacakges gzipped together is around 3kb... so it's negligible).
+Installation instructions depend on whether or not you are using D3.js in your project. If you intend to use D3 alongside gradient-path, then you don't need to install `tinygradient`. If you're going to use gradient-path standalone within your Javascript project, you must also install those dependencies (but don't worry, both pacakges gzipped together is around 8kb... so it's negligible).
 
 **Installation with any Javascript project:**
 
-`yarn add gradient-path tinygradient svg-points`
+`yarn add gradient-path tinygradient`
 
 **Installation with D3.js**
 

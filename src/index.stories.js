@@ -15,7 +15,15 @@ import {
 
 import * as d3 from 'd3';
 
-import gradientPath, { getData, flattenSegments, getMiddleSample } from './';
+import gradientPath, {
+  getData,
+  outlineStrokes,
+  averageSegmentJoins,
+  flattenSegments,
+  getMiddleSample
+} from './';
+
+import CHAINgradientPath from './new-index';
 
 const samplePathData = `M24.3,30
 C11.4,30,5,43.3,5,50
@@ -26,11 +34,11 @@ s-6.4,20-19.3,20
 C56.4,70,43.6,30,24.3,30z`;
 
 const sampleColors = [
-  { color: '#E9A36C', pos: 0 },
-  { color: '#965167', pos: 0.25 },
-  { color: '#231F3C', pos: 0.5 },
-  { color: '#965167', pos: 0.75 },
-  { color: '#E9A36C', pos: 1 }
+  { color: '#C6FFDD', pos: 0 },
+  { color: '#FBD786', pos: 0.25 },
+  { color: '#F7797D', pos: 0.5 },
+  { color: '#6DD5ED', pos: 0.75 },
+  { color: '#C6FFDD', pos: 1 }
 ];
 
 const saveSvg = (svg, name) => {
@@ -111,6 +119,59 @@ const createDataKnobs = config => {
 const stories = storiesOf('Gradient Path', module);
 
 stories.addDecorator(withKnobs);
+
+stories.add('AS CHAIN', () => {
+  const width = number(
+    'Width',
+    10,
+    {
+      range: true,
+      min: 1,
+      max: 50,
+      step: 1
+    },
+    'Main'
+  );
+
+  const { data, segments, samples, precision } = createDataKnobs();
+
+  class RenderComponent extends React.Component {
+    componentDidMount() {
+      const gp = new CHAINgradientPath(
+        document.querySelector('#gradient-path path'),
+        [
+          {
+            type: 'path',
+            fill: sampleColors,
+            width
+          },
+          {
+            type: 'circle',
+            fill: sampleColors,
+            width: 2,
+            stroke: '#333',
+            strokeWidth: 0.5
+          }
+        ],
+        segments,
+        samples,
+        precision
+      );
+
+      gp.render();
+    }
+
+    render() {
+      return (
+        <svg id="gradient-path" width="300" height="200" viewBox="0 0 100 100">
+          <path fill="none" d={data}></path>
+        </svg>
+      );
+    }
+  }
+
+  return <RenderComponent />;
+});
 
 stories.add('with path fill', () => {
   const width = number(
@@ -245,7 +306,7 @@ stories.add('with circles (fill & stroke)', () => {
             fill: sampleColors,
             width,
             stroke: strokeColor,
-            strokeWidth: strokeWidth
+            strokeWidth
           }
         ],
         data: {
@@ -306,13 +367,15 @@ stories.add('with multiple elements', () => {
         elements: [
           {
             type: 'path',
-            stroke: sampleColors,
-            strokeWidth: width
+            fill: sampleColors,
+            width
           },
           {
             type: 'circle',
             fill: circleFill,
-            width: circleWidth
+            width: circleWidth,
+            stroke: '#333',
+            strokeWidth: 0.5
           }
         ],
         data: {
@@ -356,7 +419,12 @@ stories.add('using d3.js', () => {
     componentDidMount() {
       const colors = d3.interpolateRainbow;
       const path = d3.select('path').remove();
-      const data = getData(path, segments, samples, precision);
+
+      const data = getData(path, segments, samples, precision),
+        outlinedStrokes = outlineStrokes(data, width, precision),
+        finalData = averageSegmentJoins(outlinedStrokes, precision);
+
+      const flattenedData = flattenSegments(data);
 
       if (element === 'path') {
         const lineFunc = d3
@@ -366,17 +434,15 @@ stories.add('using d3.js', () => {
 
         d3.select('svg')
           .selectAll('path')
-          .data(data)
+          .data(finalData)
           .enter()
           .append('path')
-          .attr('fill', 'none')
-          .attr('stroke-width', width)
-          .attr('d', lineFunc)
-          .attr('stroke', d => colors(getMiddleSample(d).progress));
+          .attr('fill', d => colors(getMiddleSample(d).progress))
+          .attr('d', lineFunc);
       } else if (element === 'circle') {
         d3.select('svg')
           .selectAll('circle')
-          .data(flattenSegments(data))
+          .data(flattenedData)
           .enter()
           .append('circle')
           .attr('cx', d => d.x)
