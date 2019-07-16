@@ -86,10 +86,10 @@ const createDataKnobs = config => {
   const precision = shouldRound
     ? number(
         'Decimal precision',
-        3,
+        2,
         {
           range: true,
-          min: 0,
+          min: 1,
           max: 10,
           step: 1
         },
@@ -135,7 +135,7 @@ stories.add('with path fill', () => {
           {
             type: 'path',
             fill: sampleColors,
-            width: width
+            width
           }
         ],
         data: {

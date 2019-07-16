@@ -1,11 +1,18 @@
 import { svgElem, styleAttrs } from './_utils';
 import { toPath } from 'svg-points';
 
+const DEFAULT_PRECISION = 2;
+
 // The main data function!
 // Provide an SVG path, the number of segments, number of samples in each segment, and an optional precision
 // This will return an array of segments (length = numSeg), each with an array of samples (length = numSamPerSeg)
-// Each sample contains an "x" and "y" value, as well as a "progress" value indicating it's relative position along the total length of the path
-export const getData = (path, numSeg, numSamPerSeg, precision = 3) => {
+// Each sample contains an x and y value, as well as a progress value indicating it's relative position along the total length of the path
+export const getData = (
+  path,
+  numSeg,
+  numSamPerSeg,
+  precision = DEFAULT_PRECISION
+) => {
   // If the path being passed isn't a DOM node already, make it one
   path =
     path instanceof Element || path instanceof HTMLDocument
@@ -28,8 +35,8 @@ export const getData = (path, numSeg, numSamPerSeg, precision = 3) => {
 
     // If the user asks to round our x and y values, do so
     if (precision) {
-      x = x.toFixed(precision);
-      y = y.toFixed(precision);
+      x = +x.toFixed(precision);
+      y = +y.toFixed(precision);
     }
 
     allSamples.push({
@@ -70,14 +77,66 @@ export const flatten = pieces =>
     })
     .flat();
 
-export const getOutline = (data, width) => {
-  console.log(`Outline stroke (width: ${width}) from:`, data);
+// Given a segment, width, and precision level, outline a path one segment at a time
+export const outlineStroke = (segment, width, precision) => {
+  // We need to get the points perpendicular to a startPoint, given angle, radius, and precision
+  const getPerpPoints = (angle, radius, precision, startPoint) => {
+    const p0 = {
+        x: Math.sin(angle) * radius + startPoint.x,
+        y: -Math.cos(angle) * radius + startPoint.y
+      },
+      p1 = {
+        x: -Math.sin(angle) * radius + startPoint.x,
+        y: Math.cos(angle) * radius + startPoint.y
+      };
+
+    if (precision) {
+      p0.x = +p0.x.toFixed(precision);
+      p0.y = +p0.y.toFixed(precision);
+      p1.x = +p1.x.toFixed(precision);
+      p1.y = +p1.y.toFixed(precision);
+    }
+
+    return [p0, p1];
+  };
+
+  const radius = width / 2,
+    segmentData = [];
+
+  // For each sample point and the following sample point (if there is one) compute the angle and then various perpendicular points
+  segment.forEach((sample, i) => {
+    // If we're at the end of the segment and there are no further points
+    if (segment[i + 1] === undefined) return;
+
+    const p0 = segment[i], // The current sample point
+      p1 = segment[i + 1], // The next sample point
+      angle = Math.atan2(p1.y - p0.y, p1.x - p0.x), // Perpendicular angle to p0 and p1
+      p0Perps = getPerpPoints(angle, radius, precision, p0), // Get perpedicular points with a distance of radius away from p0
+      p1Perps = getPerpPoints(angle, radius, precision, p1); // Get perpedicular points with a distance of radius away from p1
+
+    // We only need the p0 perpendenciular points for the first sample
+    if (i === 0) {
+      segmentData.push(...p0Perps);
+    }
+
+    // Always push the second sample point's perpendicular points
+    segmentData.push(...p1Perps);
+  });
+
+  // segmentData is out of order...
+  // Given a segmentData length of 8, the points need to be rearranged from: 0, 2, 4, 6, 7, 5, 3, 1
+  return [
+    ...segmentData.filter((s, i) => i % 2 === 0),
+    ...segmentData.filter((s, i) => i % 2 === 1).reverse()
+  ];
 };
 
-// TODO: Do width of path
-// TODO: Update D3 example and multiple elements stories to use fill for path
-// TODO: Write new documentation and release new major version
-export default ({ path, elements, data: { segments, samples, precision } }) => {
+// The main export, allowing the user the ability to pass any DOM path have have a regenerated group of paths or circles
+export default ({
+  path,
+  elements,
+  data: { segments, samples, precision = DEFAULT_PRECISION }
+}) => {
   const data = getData(path, segments, samples, precision),
     svg = path.closest('svg');
 
@@ -96,13 +155,13 @@ export default ({ path, elements, data: { segments, samples, precision } }) => {
 
     if (type === 'path') {
       data.forEach(segment => {
-        console.log(getOutline(segment, width));
-
         // Create a path for each segment (array of samples) and append it to its elemGroup
         elemGroup.appendChild(
           svgElem('path', {
             class: 'path-segment',
-            d: toPath(segment),
+            d: width
+              ? toPath(outlineStroke(segment, width, precision)) // If we specify a width, we will be filling, so we need to outline the path
+              : toPath(segment), // Otherwise, just use the path and stroke it
             ...styleAttrs(
               fill,
               stroke,
