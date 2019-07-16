@@ -15,7 +15,7 @@ import {
 
 import * as d3 from 'd3';
 
-import gradientPath, { getData, flatten } from './';
+import gradientPath, { getData, flattenSegments, getMiddleSample } from './';
 
 const samplePathData = `M24.3,30
 C11.4,30,5,43.3,5,50
@@ -86,7 +86,7 @@ const createDataKnobs = config => {
   const precision = shouldRound
     ? number(
         'Decimal precision',
-        1,
+        2,
         {
           range: true,
           min: 1,
@@ -372,11 +372,11 @@ stories.add('using d3.js', () => {
           .attr('fill', 'none')
           .attr('stroke-width', width)
           .attr('d', lineFunc)
-          .attr('stroke', d => colors(d[(d.length / 2) | 0].progress));
+          .attr('stroke', d => colors(getMiddleSample(d).progress));
       } else if (element === 'circle') {
         d3.select('svg')
           .selectAll('circle')
-          .data(flatten(data))
+          .data(flattenSegments(data))
           .enter()
           .append('circle')
           .attr('cx', d => d.x)

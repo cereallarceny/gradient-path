@@ -1,7 +1,7 @@
 import { svgElem, styleAttrs } from './_utils';
 import { toPath } from 'svg-points';
 
-const DEFAULT_PRECISION = 1;
+const DEFAULT_PRECISION = 2;
 
 // The main data function!
 // Provide an SVG path, the number of segments, number of samples in each segment, and an optional precision
@@ -68,7 +68,7 @@ export const getData = (
 
 // Flatten all values, but preserve the id (each sample in a segment group has the same id)
 // This is helpful for rendering all of samples (as dots in the path, or whatever you'd like)
-export const flatten = pieces =>
+export const flattenSegments = pieces =>
   pieces
     .map((segment, i) => {
       return segment.map(sample => {
@@ -76,6 +76,15 @@ export const flatten = pieces =>
       });
     })
     .flat();
+
+// When we run a fill on a path, it rearranges the order of the samples in a segment
+// This is helpful for ordering the segment by progress and returning the middle most sample
+// This is to be used to get the color for any path segment
+export const getMiddleSample = segment => {
+  segment.sort((a, b) => a.progress - b.progress);
+
+  return segment[(segment.length / 2) | 0];
+};
 
 // Given each segment in data, width, and precision level, outline a path one segment at a time
 export const outlineStrokes = (data, width, precision) => {
@@ -227,14 +236,14 @@ export default ({
               fill,
               stroke,
               strokeWidth,
-              segment[(segment.length / 2) | 0].progress
+              getMiddleSample(segment).progress
             )
           })
         );
       });
     } else if (type === 'circle') {
-      flatten(data).forEach(sample => {
-        // Create a circle for each sample (because we called "flatten(data)" on the line before) and append it to its elemGroup
+      flattenSegments(data).forEach(sample => {
+        // Create a circle for each sample (because we called "flattenSegments(data)" on the line before) and append it to its elemGroup
         elemGroup.appendChild(
           svgElem('circle', {
             class: 'circle-sample',
