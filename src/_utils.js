@@ -28,19 +28,19 @@ export const styleAttrs = (fill, stroke, strokeWidth, i) => {
   return attrs;
 };
 
-export const segmentToD = segment => {
+export const segmentToD = samples => {
   let d = '';
 
-  segment.forEach((sample, i) => {
+  samples.forEach((sample, i) => {
     const { x, y } = sample,
-      prevSample = i === 0 ? null : segment[i - 1];
+      prevSample = i === 0 ? null : samples[i - 1];
 
-    if (i === 0 && i !== segment.length - 1) {
+    if (i === 0 && i !== samples.length - 1) {
       d += `M${x},${y}`;
     } else if (
-      i === segment.length - 1 &&
-      x === segment[0].x &&
-      y === segment[0].y
+      i === samples.length - 1 &&
+      x === samples[0].x &&
+      y === samples[0].y
     ) {
       d += 'Z';
     } else if (x !== prevSample.x && y !== prevSample.y) {
@@ -53,4 +53,10 @@ export const segmentToD = segment => {
   });
 
   return d;
+};
+
+export const getMiddleSample = samples => {
+  const sortedSamples = [...samples].sort((a, b) => a.progress - b.progress);
+
+  return sortedSamples[(sortedSamples.length / 2) | 0];
 };

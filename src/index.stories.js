@@ -15,15 +15,7 @@ import {
 
 import * as d3 from 'd3';
 
-import gradientPath, {
-  getData,
-  outlineStrokes,
-  averageSegmentJoins,
-  flattenSegments,
-  getMiddleSample
-} from './';
-
-import CHAINgradientPath from './new-index';
+import GradientPath, { getData, strokeToFill, flattenSegments } from './';
 
 const samplePathData = `M24.3,30
 C11.4,30,5,43.3,5,50
@@ -120,59 +112,6 @@ const stories = storiesOf('Gradient Path', module);
 
 stories.addDecorator(withKnobs);
 
-stories.add('AS CHAIN', () => {
-  const width = number(
-    'Width',
-    10,
-    {
-      range: true,
-      min: 1,
-      max: 50,
-      step: 1
-    },
-    'Main'
-  );
-
-  const { data, segments, samples, precision } = createDataKnobs();
-
-  class RenderComponent extends React.Component {
-    componentDidMount() {
-      const gp = new CHAINgradientPath(
-        document.querySelector('#gradient-path path'),
-        [
-          {
-            type: 'path',
-            fill: sampleColors,
-            width
-          },
-          {
-            type: 'circle',
-            fill: sampleColors,
-            width: 2,
-            stroke: '#333',
-            strokeWidth: 0.5
-          }
-        ],
-        segments,
-        samples,
-        precision
-      );
-
-      gp.render();
-    }
-
-    render() {
-      return (
-        <svg id="gradient-path" width="300" height="200" viewBox="0 0 100 100">
-          <path fill="none" d={data}></path>
-        </svg>
-      );
-    }
-  }
-
-  return <RenderComponent />;
-});
-
 stories.add('with path fill', () => {
   const width = number(
     'Width',
@@ -190,20 +129,17 @@ stories.add('with path fill', () => {
 
   class RenderComponent extends React.Component {
     componentDidMount() {
-      gradientPath({
-        path: document.querySelector('#gradient-path path'),
-        elements: [
-          {
-            type: 'path',
-            fill: sampleColors,
-            width
-          }
-        ],
-        data: {
-          segments,
-          samples,
-          precision
-        }
+      const gp = new GradientPath(
+        document.querySelector('#gradient-path path'),
+        segments,
+        samples,
+        precision
+      );
+
+      gp.render({
+        type: 'path',
+        fill: sampleColors,
+        width
       });
     }
 
@@ -236,20 +172,17 @@ stories.add('with path stroke', () => {
 
   class RenderComponent extends React.Component {
     componentDidMount() {
-      gradientPath({
-        path: document.querySelector('#gradient-path path'),
-        elements: [
-          {
-            type: 'path',
-            stroke: sampleColors,
-            strokeWidth: width
-          }
-        ],
-        data: {
-          segments,
-          samples,
-          precision
-        }
+      const gp = new GradientPath(
+        document.querySelector('#gradient-path path'),
+        segments,
+        samples,
+        precision
+      );
+
+      gp.render({
+        type: 'path',
+        stroke: sampleColors,
+        strokeWidth: width
       });
     }
 
@@ -298,22 +231,19 @@ stories.add('with circles (fill & stroke)', () => {
 
   class RenderComponent extends React.Component {
     componentDidMount() {
-      gradientPath({
-        path: document.querySelector('#gradient-path path'),
-        elements: [
-          {
-            type: 'circle',
-            fill: sampleColors,
-            width,
-            stroke: strokeColor,
-            strokeWidth
-          }
-        ],
-        data: {
-          segments,
-          samples,
-          precision
-        }
+      const gp = new GradientPath(
+        document.querySelector('#gradient-path path'),
+        segments,
+        samples,
+        precision
+      );
+
+      gp.render({
+        type: 'circle',
+        fill: sampleColors,
+        width,
+        stroke: strokeColor,
+        strokeWidth
       });
     }
 
@@ -362,27 +292,25 @@ stories.add('with multiple elements', () => {
 
   class RenderComponent extends React.Component {
     componentDidMount() {
-      gradientPath({
-        path: document.querySelector('#gradient-path path'),
-        elements: [
-          {
-            type: 'path',
-            fill: sampleColors,
-            width
-          },
-          {
-            type: 'circle',
-            fill: circleFill,
-            width: circleWidth,
-            stroke: '#333',
-            strokeWidth: 0.5
-          }
-        ],
-        data: {
-          segments,
-          samples,
-          precision
-        }
+      const gp = new GradientPath(
+        document.querySelector('#gradient-path path'),
+        segments,
+        samples,
+        precision
+      );
+
+      gp.render({
+        type: 'path',
+        fill: sampleColors,
+        width
+      });
+
+      gp.render({
+        type: 'circle',
+        fill: circleFill,
+        width: circleWidth,
+        stroke: '#333',
+        strokeWidth: 0.5
       });
     }
 
@@ -419,12 +347,7 @@ stories.add('using d3.js', () => {
     componentDidMount() {
       const colors = d3.interpolateRainbow;
       const path = d3.select('path').remove();
-
-      const data = getData(path, segments, samples, precision),
-        outlinedStrokes = outlineStrokes(data, width, precision),
-        finalData = averageSegmentJoins(outlinedStrokes, precision);
-
-      const flattenedData = flattenSegments(data);
+      const data = getData(path.node(), segments, samples, precision);
 
       if (element === 'path') {
         const lineFunc = d3
@@ -434,15 +357,15 @@ stories.add('using d3.js', () => {
 
         d3.select('svg')
           .selectAll('path')
-          .data(finalData)
+          .data(strokeToFill(data, width, precision))
           .enter()
           .append('path')
-          .attr('fill', d => colors(getMiddleSample(d).progress))
-          .attr('d', lineFunc);
+          .attr('fill', d => colors(d.progress))
+          .attr('d', d => lineFunc(d.samples));
       } else if (element === 'circle') {
         d3.select('svg')
           .selectAll('circle')
-          .data(flattenedData)
+          .data(flattenSegments(data))
           .enter()
           .append('circle')
           .attr('cx', d => d.x)
