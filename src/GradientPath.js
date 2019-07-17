@@ -2,7 +2,7 @@ import { getData, strokeToFill, flattenSegments } from './data';
 import { svgElem, styleAttrs, segmentToD } from './_utils';
 
 export default class GradientPath {
-  constructor(path, numSegments, numSamples, precision = 2) {
+  constructor({ path, segments, samples, precision = 2 }) {
     // If the path being passed isn't a DOM node already, make it one
     path =
       path instanceof Element || path instanceof HTMLDocument
@@ -10,8 +10,8 @@ export default class GradientPath {
         : path.node();
 
     this.path = path;
-    this.numSegments = numSegments;
-    this.numSamples = numSamples;
+    this.numSegments = segments;
+    this.numSamples = samples;
     this.precision = precision;
     this.renders = [];
 
@@ -20,7 +20,7 @@ export default class GradientPath {
       class: 'gradient-path'
     });
 
-    this.data = getData(path, numSegments, numSamples, precision);
+    this.data = getData(path, segments, samples, precision);
 
     // Append the main group to the SVG
     this.svg.appendChild(this.group);

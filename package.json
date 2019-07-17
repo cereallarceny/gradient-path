@@ -49,6 +49,7 @@
     "@babel/preset-env": "^7.4.5",
     "@babel/preset-react": "^7.0.0",
     "@storybook/addon-knobs": "^5.1.9",
+    "@storybook/addon-notes": "^5.1.9",
     "@storybook/react": "^5.1.9",
     "auto-changelog": "^1.13.0",
     "babel-loader": "^8.0.6",
