@@ -47,25 +47,27 @@ const gp = new GradientPath({
   segments: 30,
   samples: 3,
   precision: 2 // Optional
-})
-  .render({
-    type: 'path',
-    fill: [
-      { color: '#C6FFDD', pos: 0 },
-      { color: '#FBD786', pos: 0.25 },
-      { color: '#F7797D', pos: 0.5 },
-      { color: '#6DD5ED', pos: 0.75 },
-      { color: '#C6FFDD', pos: 1 }
-    ],
-    width: 10
-  })
-  .render({
-    type: 'circle',
-    fill: '#eee',
-    width: 3,
-    stroke: '#444',
-    strokeWidth: 0.5
-  });
+});
+
+gp.render({
+  type: 'path',
+  fill: [
+    { color: '#C6FFDD', pos: 0 },
+    { color: '#FBD786', pos: 0.25 },
+    { color: '#F7797D', pos: 0.5 },
+    { color: '#6DD5ED', pos: 0.75 },
+    { color: '#C6FFDD', pos: 1 }
+  ],
+  width: 10
+});
+
+gp.render({
+  type: 'circle',
+  fill: '#eee',
+  width: 3,
+  stroke: '#444',
+  strokeWidth: 0.5
+});
 ```
 
 **Example in D3.js**
