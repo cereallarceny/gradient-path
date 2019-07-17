@@ -163,9 +163,9 @@ const averageSegmentJoins = (outlinedData, precision) => {
 
 export const flattenSegments = data =>
   data
-    .map((segment, i) => {
-      return segment.samples.map(sample => {
-        return { ...sample, id: i };
-      });
-    })
+    .map((segment, i) =>
+      segment.samples.map(
+        sample => new Sample(sample.x, sample.y, sample.progress, i)
+      )
+    )
     .flat();
