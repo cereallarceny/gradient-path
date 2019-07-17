@@ -1,0 +1,1 @@
+{"version":3,"file":"main.341d9ae8803d3bd34b49.bundle.js","sources":["webpack:///./src/Sample.js"],"sourcesContent":["export default class Sample {\n  constructor(x, y, progress, segment) {\n    this.x = x;\n    this.y = y;\n    this.progress = progress;\n    this.segment = segment;\n  }\n}\n"],"mappings":"AAAA","sourceRoot":""}
