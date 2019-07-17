@@ -37,7 +37,12 @@ d3Stories.add(
       componentDidMount() {
         const colors = d3.interpolateRainbow;
         const path = d3.select('path').remove();
-        const data = getData(path.node(), segments, samples, precision);
+        const data = getData({
+          path: path.node(),
+          segments,
+          samples,
+          precision
+        });
 
         const lineFunc = d3
           .line()
@@ -84,7 +89,12 @@ const segments = 30,
 
 const colors = d3.interpolateRainbow;
 const path = d3.select('path').remove();
-const data = getData(path.node(), segments, samples, precision);
+const data = getData({
+  path: path.node(),
+  segments,
+  samples,
+  precision
+});
 
 const lineFunc = d3
   .line()
@@ -122,7 +132,12 @@ d3Stories.add(
       componentDidMount() {
         const colors = d3.interpolateRainbow;
         const path = d3.select('path').remove();
-        const data = getData(path.node(), segments, samples, precision);
+        const data = getData({
+          path: path.node(),
+          segments,
+          samples,
+          precision
+        });
 
         const lineFunc = d3
           .line()
@@ -170,7 +185,12 @@ const segments = 30,
 
 const colors = d3.interpolateRainbow;
 const path = d3.select('path').remove();
-const data = getData(path.node(), segments, samples, precision);
+const data = getData({
+  path: path.node(),
+  segments,
+  samples,
+  precision
+});
 
 const lineFunc = d3
   .line()
@@ -225,7 +245,12 @@ d3Stories.add(
       componentDidMount() {
         const colors = d3.interpolateRainbow;
         const path = d3.select('path').remove();
-        const data = getData(path.node(), segments, samples, precision);
+        const data = getData({
+          path: path.node(),
+          segments,
+          samples,
+          precision
+        });
 
         d3.select('svg')
           .selectAll('circle')
@@ -271,7 +296,12 @@ const segments = 30,
 
 const colors = d3.interpolateRainbow;
 const path = d3.select('path').remove();
-const data = getData(path.node(), segments, samples, precision);
+const data = getData({
+  path: path.node(),
+  segments,
+  samples,
+  precision
+});
 
 d3.select('svg')
   .selectAll('circle')
@@ -282,8 +312,8 @@ d3.select('svg')
   .attr('cy', d => d.y)
   .attr('r', width / 2)
   .attr('fill', d => colors(d.progress))
-  .attr('stroke', strokeColor)
-  .attr('stroke-width', strokeWidth);
+  .attr('stroke', '#444')
+  .attr('stroke-width', 1);
 `)
 );
 
@@ -324,7 +354,12 @@ d3Stories.add(
       componentDidMount() {
         const colors = d3.interpolateRainbow;
         const path = d3.select('path').remove();
-        const data = getData(path.node(), segments, samples, precision);
+        const data = getData({
+          path: path.node(),
+          segments,
+          samples,
+          precision
+        });
 
         const lineFunc = d3
           .line()
@@ -383,7 +418,12 @@ const segments = 30,
 
 const colors = d3.interpolateRainbow;
 const path = d3.select('path').remove();
-const data = getData(path.node(), segments, samples, precision);
+const data = getData({
+  path: path.node(),
+  segments,
+  samples,
+  precision
+});
 
 const lineFunc = d3
   .line()
@@ -405,8 +445,8 @@ d3.select('svg')
   .append('circle')
   .attr('cx', d => d.x)
   .attr('cy', d => d.y)
-  .attr('r', circleWidth / 2)
-  .attr('fill', circleFill)
+  .attr('r', 1.5)
+  .attr('fill', '#eee')
   .attr('stroke', '#444')
   .attr('stroke-width', 0.5);
 `)

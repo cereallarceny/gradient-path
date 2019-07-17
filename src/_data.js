@@ -1,13 +1,19 @@
+import { DEFAULT_PRECISION } from './GradientPath';
 import Sample from './Sample';
 import Segment from './Segment';
 
-export const getData = (path, numSegments, numSamples, precision) => {
+export const getData = ({
+  path,
+  segments,
+  samples,
+  precision = DEFAULT_PRECISION
+}) => {
   // We decrement the number of samples per segment because when we group them later we will add on the first sample of the following segment
-  if (numSamples > 1) numSamples--;
+  if (samples > 1) samples--;
 
   // Get total length of path, total number of samples, and two blank arrays to hold samples and segments
   const pathLength = path.getTotalLength(),
-    totalSamples = numSegments * numSamples,
+    totalSamples = segments * samples,
     allSamples = [],
     allSegments = [];
 
@@ -25,21 +31,21 @@ export const getData = (path, numSegments, numSamples, precision) => {
     allSamples.push(new Sample(x, y, progress));
   }
 
-  // Out of all the samples gathered, sort them into groups of length = numSamples
+  // Out of all the samples gathered, sort them into groups of length = samples
   // Each group includes the samples of the current segment, with the last sample being first sample from the next group
   // This "nextStart" becomes the "currentStart" every time segment is interated
-  for (let segment = 0; segment < numSegments; segment++) {
-    const currentStart = segment * numSamples;
-    const nextStart = currentStart + numSamples;
-    const samples = [];
+  for (let segment = 0; segment < segments; segment++) {
+    const currentStart = segment * samples;
+    const nextStart = currentStart + samples;
+    const segmentSamples = [];
 
-    for (let samInSeg = 0; samInSeg < numSamples; samInSeg++) {
-      samples.push(allSamples[currentStart + samInSeg]);
+    for (let samInSeg = 0; samInSeg < samples; samInSeg++) {
+      segmentSamples.push(allSamples[currentStart + samInSeg]);
     }
 
-    samples.push(allSamples[nextStart]);
+    segmentSamples.push(allSamples[nextStart]);
 
-    allSegments.push(new Segment(samples));
+    allSegments.push(new Segment(segmentSamples));
   }
 
   return allSegments;
