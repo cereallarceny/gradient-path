@@ -37,18 +37,16 @@ export const segmentToD = samples => {
 
     if (i === 0 && i !== samples.length - 1) {
       d += `M${x},${y}`;
-    } else if (
-      i === samples.length - 1 &&
-      x === samples[0].x &&
-      y === samples[0].y
-    ) {
-      d += 'Z';
     } else if (x !== prevSample.x && y !== prevSample.y) {
       d += `L${x},${y}`;
     } else if (x !== prevSample.x) {
       d += `H${x}`;
     } else if (y !== prevSample.y) {
       d += `V${y}`;
+    }
+
+    if (i === samples.length - 1) {
+      d += 'Z';
     }
   });
 
