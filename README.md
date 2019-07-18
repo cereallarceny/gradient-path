@@ -11,7 +11,7 @@ A small library to have any gradient follow along any SVG path
 - Use on any valid SVG `path`
 - **You can pair it with D3.js, or use it standalone**
 
-![Gradient Path](./example.svg)
+![Gradient Path](./gradient.png)
 
 [This library is inspired of the work of the great Mike Bostock.](https://bl.ocks.org/mbostock/4163057) We opted to remove the depedency on D3 and generalize the code a bit more to allow other people to more easily use it in their projects.
 
@@ -221,6 +221,30 @@ d3.select('svg')
   .attr('fill', d => colors(d.progress)) // Now we can fill...
   .attr('d', d => lineFunc(d.samples));
 ```
+
+## A note about antialiasing
+
+[As Mike Bostock mentioned in his example](https://bl.ocks.org/mbostock/4163057):
+
+> This example uses a thin stroke in addition to filling the segments. This avoids antialiasing artifacts due to most web browsers not implementing [full-scene antialiasing](https://bugs.webkit.org/show_bug.cgi?id=35211).
+
+This is true and unavoidable. In both his example and in Gradient Path, you may notice small gaps between the edges of each segment. _Don't worry, your glasses are working just fine._
+
+This is a well-known issue in every browser I've tested.
+
+The fix is simple but annoying. You can add a very subtle stroke the same color as the fill, like this:
+
+```js
+gp.render({
+  type: 'path',
+  fill: myColors,
+  width: 10,
+  stroke: myColors,
+  strokeWidth: 0.5
+});
+```
+
+![Antialiasing](./antialiasing.png)
 
 ## Contributing
 
