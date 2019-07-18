@@ -19,6 +19,8 @@ A small library to have any gradient follow along any SVG path
 
 [Play around with it on CodeSandbox](https://codesandbox.io/s/gradient-path-wstzn)
 
+[Read about it on Medium](https://medium.com/@cereallarceny/getting-gradients-to-follow-along-svg-paths-in-javascript-45357b60bed7)
+
 ## Installation
 
 Installation instructions depend on whether or not you are using D3.js in your project. If you intend to use D3 alongside `gradient-path`, then you **do not need** to install `tinygradient`. If you're going to use gradient-path standalone within your Javascript project, you must also install those dependencies (but don't worry, both pacakges gzipped together is around 8kb... so it's negligible).
