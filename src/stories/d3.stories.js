@@ -10,7 +10,7 @@ import * as d3 from 'd3';
 
 import { createDataKnobs, Container, markdownStyling } from './helpers';
 
-import { getData, strokeToFill, flattenSegments } from '..';
+import { getData, strokeToFill } from '..';
 
 const d3Stories = storiesOf('Gradient Path/Using D3', module);
 
@@ -37,12 +37,7 @@ d3Stories.add(
       componentDidMount() {
         const colors = d3.interpolateRainbow;
         const path = d3.select('path').remove();
-        const data = getData({
-          path: path.node(),
-          segments,
-          samples,
-          precision
-        });
+        const data = getData({ path, segments, samples, precision });
 
         const lineFunc = d3
           .line()
@@ -89,12 +84,7 @@ const segments = 30,
 
 const colors = d3.interpolateRainbow;
 const path = d3.select('path').remove();
-const data = getData({
-  path: path.node(),
-  segments,
-  samples,
-  precision
-});
+const data = getData({ path, segments, samples, precision });
 
 const lineFunc = d3
   .line()
@@ -132,12 +122,7 @@ d3Stories.add(
       componentDidMount() {
         const colors = d3.interpolateRainbow;
         const path = d3.select('path').remove();
-        const data = getData({
-          path: path.node(),
-          segments,
-          samples,
-          precision
-        });
+        const data = getData({ path, segments, samples, precision });
 
         const lineFunc = d3
           .line()
@@ -185,12 +170,7 @@ const segments = 30,
 
 const colors = d3.interpolateRainbow;
 const path = d3.select('path').remove();
-const data = getData({
-  path: path.node(),
-  segments,
-  samples,
-  precision
-});
+const data = getData({ path, segments, samples, precision });
 
 const lineFunc = d3
   .line()
@@ -245,16 +225,12 @@ d3Stories.add(
       componentDidMount() {
         const colors = d3.interpolateRainbow;
         const path = d3.select('path').remove();
-        const data = getData({
-          path: path.node(),
-          segments,
-          samples,
-          precision
-        });
+        const data = getData({ path, segments, samples, precision });
+        const flattenedData = data.flatMap(({ samples }) => samples);
 
         d3.select('svg')
           .selectAll('circle')
-          .data(flattenSegments(data))
+          .data(flattenedData)
           .enter()
           .append('circle')
           .attr('cx', d => d.x)
@@ -287,7 +263,7 @@ d3Stories.add(
   },
   markdownStyling(`
 import * as d3 from 'd3';
-import { getData, flattenSegments } from 'gradient-path';
+import { getData } from 'gradient-path';
 
 const segments = 30,
   samples = 3,
@@ -296,16 +272,12 @@ const segments = 30,
 
 const colors = d3.interpolateRainbow;
 const path = d3.select('path').remove();
-const data = getData({
-  path: path.node(),
-  segments,
-  samples,
-  precision
-});
+const data = getData({ path, segments, samples, precision });
+const flattenedData = data.flatMap(({ samples }) => samples);
 
 d3.select('svg')
   .selectAll('circle')
-  .data(flattenSegments(data))
+  .data(flattenedData)
   .enter()
   .append('circle')
   .attr('cx', d => d.x)
@@ -354,12 +326,8 @@ d3Stories.add(
       componentDidMount() {
         const colors = d3.interpolateRainbow;
         const path = d3.select('path').remove();
-        const data = getData({
-          path: path.node(),
-          segments,
-          samples,
-          precision
-        });
+        const data = getData({ path, segments, samples, precision });
+        const flattenedData = data.flatMap(({ samples }) => samples);
 
         const lineFunc = d3
           .line()
@@ -376,7 +344,7 @@ d3Stories.add(
 
         d3.select('svg')
           .selectAll('circle')
-          .data(flattenSegments(data))
+          .data(flattenedData)
           .enter()
           .append('circle')
           .attr('cx', d => d.x)
@@ -409,7 +377,7 @@ d3Stories.add(
   },
   markdownStyling(`
 import * as d3 from 'd3';
-import { getData, strokeToFill, flattenSegments } from 'gradient-path';
+import { getData, strokeToFill } from 'gradient-path';
 
 const segments = 30,
   samples = 3,
@@ -418,12 +386,8 @@ const segments = 30,
 
 const colors = d3.interpolateRainbow;
 const path = d3.select('path').remove();
-const data = getData({
-  path: path.node(),
-  segments,
-  samples,
-  precision
-});
+const data = getData({ path, segments, samples, precision });
+const flattenedData = data.flatMap(({ samples }) => samples);
 
 const lineFunc = d3
   .line()
@@ -440,7 +404,7 @@ d3.select('svg')
 
 d3.select('svg')
   .selectAll('circle')
-  .data(flattenSegments(data))
+  .data(flattenedData)
   .enter()
   .append('circle')
   .attr('cx', d => d.x)

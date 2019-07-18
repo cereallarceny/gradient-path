@@ -74,7 +74,7 @@ gp.render({
 
 ```js
 import * as d3 from 'd3';
-import { getData, strokeToFill, flattenSegments } from 'gradient-path';
+import { getData, strokeToFill } from 'gradient-path';
 
 const segments = 30,
   samples = 3,
@@ -86,12 +86,8 @@ const colors = d3.interpolateRainbow;
 // Make sure to remove() the node
 const path = d3.select('path').remove();
 
-const data = getData({
-  path: path.node(),
-  segments,
-  samples,
-  precision
-});
+const data = getData({ path, segments, samples, precision });
+const flattenedData = data.flatMap(({ samples }) => samples);
 
 const lineFunc = d3
   .line()
@@ -108,7 +104,7 @@ d3.select('svg')
 
 d3.select('svg')
   .selectAll('circle')
-  .data(flattenSegments(data))
+  .data(flattenedData)
   .enter()
   .append('circle')
   .attr('cx', d => d.x)
@@ -142,12 +138,7 @@ gp.render(...)
 const path = d3.select('path').remove();
 
 // Our Gradient Path data array
-const data = getData({
-  path: path.node(),
-  segments,
-  samples,
-  precision
-});
+const data = getData({ path, segments, samples, precision });
 
 // D3 code here...
 ```
@@ -156,7 +147,7 @@ const data = getData({
 
 The four keys are `path`, `segments`, `samples`, and `precision`:
 
-- **path** (_required_) - This is the `path` you intend to convert to a gradient path. **It must be a valid DOM node.**
+- **path** (_required_) - This is the `path` you intend to convert to a gradient path. **It must be a valid DOM node or D3 selection.**
 
 - **segments** (_required_) - The number of segments you want in your path or circles. You can also think of this as: "how many different colors do I want to display?"
 
@@ -165,6 +156,8 @@ The four keys are `path`, `segments`, `samples`, and `precision`:
 - **precision** (_optional_) - The amount of decimal places to keep for each point in the path. The default is `2`, and for the sake of keeping your path's `d` attribute short and comprehendible, we recommend this stay the same.
 
 ### Render function
+
+**This only applies to usage with plain Javascript, it doesn't work with D3.**
 
 The `render()` function is the only function available in the `GradientPath` class. It is responsible for taking it's own configuration object consisting of a few properties:
 
@@ -200,24 +193,15 @@ You may have as many `render()` functions as you desire. Here's the structure of
 
 As a general rule, if you use `fill` then you'll need to define a `width`. Likewise, if you use a `stroke` then you will need to defined a `strokeWidth`. Defaults are not set for these values.
 
-### Further usage with D3
+### Outlining a stroke
 
-A keen eye might have spotted a few extra functions for providing nice-to-have support in D3. Of course, you have the `getData()` function mentioned above which gives you data to work with. However, depending on what you're rendering and how you're rendering it, you'll need two other function at your disposal:
+**This only applies to usage with D3.**
 
-#### strokeToFill(data, width, precision)
-
-Perhaps the coolest function of all. This turns any stroke data (the kind of data produced by `getData()`) into an outlined `path` capable of being filled. Simply put:
-
-> If you're planning on using `fill` on any `path` under Gradient Path, you'll need to convert that data to be outlined. You cannot `fill` a `stroke`. You must outline your stroked data first.
+A keen eye might have spotted a subtle difference in how we use `getData()` when filling an SVG `path`. In order to work with `fill`, you'll first need to outline your data. You may do this using the `strokeToFill(data, width, precision)` function. You can use it like such:
 
 ```js
 // We got the data in stroke form
-const data = getData({
-  path: path.node(),
-  segments,
-  samples,
-  precision
-});
+const data = getData({ path, segments, samples, precision });
 
 // Time to outline that data!
 const outlinedData = strokeToFill(data, width, precision);
@@ -228,46 +212,14 @@ const lineFunc = d3
   .x(d => d.x)
   .y(d => d.y);
 
-// Fill it up!
+// Run through our paths
 d3.select('svg')
   .selectAll('path')
   .data(outlinedData);
   .enter()
   .append('path')
-  .attr('fill', d => colors(d.progress))
+  .attr('fill', d => colors(d.progress)) // Now we can fill...
   .attr('d', d => lineFunc(d.samples));
-```
-
-#### flattenSegments(data)
-
-Also cool, but not nearly as snazzy. This function is quite helpful when working with SVG `circle` shapes. Naturally, the extra layer of organizations that segments give us is helpful when working with _line segments_ (`path`'s), but not so helpful with `circle`'s. Simply put:
-
-> In order to work with any SVG `circle` shapes, you'll need to flatten your line segments into just a big array of samples.
-
-```js
-// We got the data in stroke form
-const data = getData({
-  path: path.node(),
-  segments,
-  samples,
-  precision
-});
-
-// Flatten dat data!
-const flattenedData = flattenSegments(data);
-
-// Draw some dots
-d3.select('svg')
-  .selectAll('circle')
-  .data(flattenedData)
-  .enter()
-  .append('circle')
-  .attr('cx', d => d.x)
-  .attr('cy', d => d.y)
-  .attr('r', 1.5)
-  .attr('fill', '#eee')
-  .attr('stroke', '#444')
-  .attr('stroke-width', 0.5);
 ```
 
 ## Contributing

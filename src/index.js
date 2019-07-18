@@ -1,4 +1,2 @@
-import GradientPath from './GradientPath';
-
-export default GradientPath;
-export { getData, strokeToFill, flattenSegments } from './_data';
+export { default } from './GradientPath';
+export { getData, strokeToFill } from './_data';
