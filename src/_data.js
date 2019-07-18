@@ -28,7 +28,7 @@ export const getData = ({
       y = +y.toFixed(precision);
     }
 
-    allSamples.push(new Sample(x, y, progress));
+    allSamples.push(new Sample({ x, y, progress }));
   }
 
   // Out of all the samples gathered, sort them into groups of length = samples
@@ -45,7 +45,7 @@ export const getData = ({
 
     segmentSamples.push(allSamples[nextStart]);
 
-    allSegments.push(new Segment(segmentSamples));
+    allSegments.push(new Segment({ samples: segmentSamples }));
   }
 
   return allSegments;
@@ -61,16 +61,16 @@ export const strokeToFill = (data, width, precision) => {
 const outlineStrokes = (data, width, precision) => {
   // We need to get the points perpendicular to a startPoint, given angle, radius, and precision
   const getPerpSamples = (angle, radius, precision, startPoint) => {
-    const p0 = new Sample(
-        Math.sin(angle) * radius + startPoint.x,
-        -Math.cos(angle) * radius + startPoint.y,
-        startPoint.progress
-      ),
-      p1 = new Sample(
-        -Math.sin(angle) * radius + startPoint.x,
-        Math.cos(angle) * radius + startPoint.y,
-        startPoint.progress
-      );
+    const p0 = new Sample({
+        x: Math.sin(angle) * radius + startPoint.x,
+        y: -Math.cos(angle) * radius + startPoint.y,
+        progress: startPoint.progress
+      }),
+      p1 = new Sample({
+        x: -Math.sin(angle) * radius + startPoint.x,
+        y: Math.cos(angle) * radius + startPoint.y,
+        progress: startPoint.progress
+      });
 
     if (precision) {
       p0.x = +p0.x.toFixed(precision);
@@ -112,10 +112,12 @@ const outlineStrokes = (data, width, precision) => {
     // segmentSamples is out of order...
     // Given a segmentSamples length of 8, the points need to be rearranged from: 0, 2, 4, 6, 7, 5, 3, 1
     outlinedData.push(
-      new Segment([
-        ...segmentSamples.filter((s, i) => i % 2 === 0),
-        ...segmentSamples.filter((s, i) => i % 2 === 1).reverse()
-      ])
+      new Segment({
+        samples: [
+          ...segmentSamples.filter((s, i) => i % 2 === 0),
+          ...segmentSamples.filter((s, i) => i % 2 === 1).reverse()
+        ]
+      })
     );
   }
 
@@ -170,8 +172,6 @@ const averageSegmentJoins = (outlinedData, precision) => {
 export const flattenSegments = data =>
   data
     .map((segment, i) =>
-      segment.samples.map(
-        sample => new Sample(sample.x, sample.y, sample.progress, i)
-      )
+      segment.samples.map(sample => new Sample({ ...sample, segment: i }))
     )
     .flat();
