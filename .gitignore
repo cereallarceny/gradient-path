@@ -3,3 +3,4 @@
 /storybook-static
 .DS_Store
 yarn-error.log
+/src/*.js
