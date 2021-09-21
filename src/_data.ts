@@ -1,4 +1,5 @@
-import { DEFAULT_PRECISION } from './GradientPath';
+import { DEFAULT_PRECISION, GradientPathProps } from './GradientPath';
+
 import Sample from './Sample';
 import Segment from './Segment';
 import { convertPathToNode } from './_utils';
@@ -12,7 +13,7 @@ export const getData = ({
   segments,
   samples,
   precision = DEFAULT_PRECISION
-}) => {
+}: GradientPathProps) => {
   // Convert the given path to a DOM node if it isn't already one
   path = convertPathToNode(path);
 
@@ -57,7 +58,7 @@ export const getData = ({
     segmentSamples.push(allSamples[nextStart]);
 
     // Create a new Segment with the samples from segmentSamples
-    allSegments.push(new Segment({ samples: segmentSamples }));
+    allSegments.push(new Segment(segmentSamples));
   }
 
   // Return our group of segments
@@ -67,7 +68,7 @@ export const getData = ({
 // The function responsible for converting strokable data (from getData()) into fillable data
 // This allows any SVG path to be filled instead of just stroked, allowing for the user to fill and stroke paths simultaneously
 // We start by outlining the stroked data given a specified width and the we average together the edges where adjacent segments touch
-export const strokeToFill = (data, width, precision) => {
+export const strokeToFill = (data: Segment[], width: number, precision: number) => {
   const outlinedStrokes = outlineStrokes(data, width, precision),
     averagedSegmentJoins = averageSegmentJoins(outlinedStrokes, precision);
 
@@ -75,14 +76,14 @@ export const strokeToFill = (data, width, precision) => {
 };
 
 // An internal function for outlining stroked data
-const outlineStrokes = (data, width, precision) => {
+const outlineStrokes = (data: Segment[], width: number, precision: number) => {
   // We need to get the points perpendicular to a startPoint, given an angle, radius, and precision
-  const getPerpSamples = (angle, radius, precision, startPoint) => {
+  const getPerpSamples = (angle: number, radius: number, precision: number, startPoint: Sample) => {
     const p0 = new Sample({
-        ...startPoint,
-        x: Math.sin(angle) * radius + startPoint.x,
-        y: -Math.cos(angle) * radius + startPoint.y
-      }),
+      ...startPoint,
+      x: Math.sin(angle) * radius + startPoint.x,
+      y: -Math.cos(angle) * radius + startPoint.y
+    }),
       p1 = new Sample({
         ...startPoint,
         x: -Math.sin(angle) * radius + startPoint.x,
@@ -133,12 +134,10 @@ const outlineStrokes = (data, width, precision) => {
     // segmentSamples is out of order...
     // Given a segmentSamples length of 8, the points need to be rearranged from: 0, 2, 4, 6, 7, 5, 3, 1
     outlinedData.push(
-      new Segment({
-        samples: [
-          ...segmentSamples.filter((s, i) => i % 2 === 0),
-          ...segmentSamples.filter((s, i) => i % 2 === 1).reverse()
-        ]
-      })
+      new Segment([
+        ...segmentSamples.filter((_, i) => i % 2 === 0),
+        ...segmentSamples.filter((_, i) => i % 2 === 1).reverse()
+      ])
     );
   }
 
@@ -148,15 +147,15 @@ const outlineStrokes = (data, width, precision) => {
 // An internal function taking outlinedData (from outlineStrokes()) and averaging adjacent edges
 // If we didn't do this, our data would be fillable, but it would look stroked
 // This function fixes where segments overlap and underlap each other
-const averageSegmentJoins = (outlinedData, precision) => {
+const averageSegmentJoins = (outlinedData: Segment[], precision: number) => {
   // Find the average x and y between two points (p0 and p1)
-  const avg = (p0, p1) => ({
+  const avg = (p0: Sample, p1: Sample) => ({
     x: (p0.x + p1.x) / 2,
     y: (p0.y + p1.y) / 2
   });
 
   // Recombine the new x and y positions with all the other keys in the object
-  const combine = (segment, pos, avg) => ({
+  const combine = (segment: Segment[], pos: number, avg: { x: number, y: number }) => ({
     ...segment[pos],
     x: avg.x,
     y: avg.y

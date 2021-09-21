@@ -1,10 +1,47 @@
+import { convertPathToNode, segmentToD, styleAttrs, svgElem } from './_utils';
 import { getData, strokeToFill } from './_data';
-import { svgElem, styleAttrs, segmentToD, convertPathToNode } from './_utils';
+
+import Sample from './Sample';
+import Segment from './Segment';
 
 export const DEFAULT_PRECISION = 2;
 
+interface RenderCycle {
+  group: SVGElement
+  data: Segment[]
+}
+
+export interface Color {
+  color: string
+  pos: number
+}
+
+interface RenderProps {
+  type: "circle" | "path"
+  stroke: Color[]
+  strokeWidth: number
+  fill: Color[]
+  width: number
+}
+
+export interface GradientPathProps {
+  path: SVGPathElement
+  segments: number,
+  samples: number,
+  precision?: number
+}
+
 export default class GradientPath {
-  constructor({ path, segments, samples, precision = DEFAULT_PRECISION }) {
+  path: SVGPathElement;
+  segments: number;
+  samples: number;
+  precision: number;
+  renders: RenderCycle[];
+  group: SVGElement;
+  data: Segment[];
+  svg: SVGElement | null;
+
+  constructor({ path, segments, samples, precision = DEFAULT_PRECISION }: GradientPathProps) {
     // If the path being passed isn't a DOM node already, make it one
     this.path = convertPathToNode(path);
 
@@ -25,15 +62,15 @@ export default class GradientPath {
     this.data = getData({ path, segments, samples, precision });
 
     // Append the main group to the SVG
-    this.svg.appendChild(this.group);
+    this.svg?.appendChild(this.group);
 
     // Remove the main path once we have the data values
-    this.path.parentNode.removeChild(this.path);
+    this.path.parentNode?.removeChild(this.path);
   }
 
-  render({ type, stroke, strokeWidth, fill, width }) {
+  render({ type, stroke, strokeWidth, fill, width }: RenderProps) {
     // Store information from this render cycle
-    const renderCycle = {};
+    const renderCycle = {} as RenderCycle;
 
     // Create a group for each element
     const elemGroup = svgElem('g', { class: `element-${type}` });
@@ -62,18 +99,18 @@ export default class GradientPath {
         );
       }
     } else if (type === 'circle') {
-      renderCycle.data = this.data.flatMap(({ samples }) => samples);
+      const samples: Sample[] = this.data.flatMap(({ samples }) => samples);
 
-      for (let j = 0; j < renderCycle.data.length; j++) {
-        const { x, y, progress } = renderCycle.data[j];
+      for (let j = 0; j < samples.length; j++) {
+        const { x, y, progress } = samples[j];
 
         // Create a circle for each sample and append it to its elemGroup
         elemGroup.appendChild(
           svgElem('circle', {
             class: 'circle-sample',
-            cx: x,
-            cy: y,
-            r: width / 2,
+            cx: x.toString(),
+            cy: y.toString(),
+            r: (width / 2).toString(),
             ...styleAttrs(fill, stroke, strokeWidth, progress)
           })
         );
