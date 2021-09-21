@@ -21,7 +21,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mnsht/gradient-path.git"
+    "url": "git+https://github.com/jannec22/gradient-path.git"
   },
   "keywords": [
     "svg",
@@ -35,9 +35,9 @@
   "author": "Moonshot <contact@mns.ht>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/mnsht/gradient-path/issues"
+    "url": "https://github.com/jannec22/gradient-path/issues"
   },
-  "homepage": "https://mnsht.github.io/gradient-path/",
+  "homepage": "https://github.com/jannec22/gradient-path",
   "browserslist": "> 0.25%, not dead",
   "husky": {
     "hooks": {
