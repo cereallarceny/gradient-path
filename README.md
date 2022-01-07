@@ -1,8 +1,8 @@
 # Gradient Path
 
-![Travis (.org)](https://img.shields.io/travis/mnsht/gradient-path.svg?color=green)
+![Travis (.org)](https://img.shields.io/travis/cereallarceny/gradient-path.svg?color=green)
 ![npm](https://img.shields.io/npm/v/gradient-path.svg?color=green)
-![GitHub](https://img.shields.io/github/license/mnsht/gradient-path.svg?color=green)
+![GitHub](https://img.shields.io/github/license/cereallarceny/gradient-path.svg?color=green)
 
 A small library to have any gradient follow along any SVG path
 
@@ -15,7 +15,7 @@ A small library to have any gradient follow along any SVG path
 
 [This library is inspired of the work of the great Mike Bostock.](https://bl.ocks.org/mbostock/4163057) We opted to remove the depedency on D3 and generalize the code a bit more to allow other people to more easily use it in their projects.
 
-[Play around with it in Storybook](https://mnsht.github.io/gradient-path/)
+[Play around with it in Storybook](https://cereallarceny.github.io/gradient-path/)
 
 [Play around with it on CodeSandbox](https://codesandbox.io/s/gradient-path-wstzn)
 
