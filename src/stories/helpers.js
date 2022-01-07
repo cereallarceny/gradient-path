@@ -6,7 +6,7 @@ export const markdownStyling = code => ({
     markdown: `
       # Gradient Path
 
-      [Link to documentation](https://github.com/mnsht/gradient-path)
+      [Link to documentation](https://github.com/cereallarceny/gradient-path)
 
       Simply add **gradient-path** to your project [from NPM](https://www.npmjs.com/package/gradient-path) and use it like such:
 
