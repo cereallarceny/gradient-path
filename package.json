@@ -21,7 +21,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mnsht/gradient-path.git"
+    "url": "git+https://github.com/cereallarceny/gradient-path.git"
   },
   "keywords": [
     "svg",
@@ -29,15 +29,13 @@
     "path",
     "linear",
     "d3",
-    "moonshot",
-    "mnsht"
   ],
   "author": "Moonshot <contact@mns.ht>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/mnsht/gradient-path/issues"
+    "url": "https://github.com/cereallarceny/gradient-path/issues"
   },
-  "homepage": "https://mnsht.github.io/gradient-path/",
+  "homepage": "https://cereallarceny.github.io/gradient-path/",
   "browserslist": "> 0.25%, not dead",
   "husky": {
     "hooks": {
