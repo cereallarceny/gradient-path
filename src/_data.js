@@ -67,9 +67,9 @@ export const getData = ({
 // The function responsible for converting strokable data (from getData()) into fillable data
 // This allows any SVG path to be filled instead of just stroked, allowing for the user to fill and stroke paths simultaneously
 // We start by outlining the stroked data given a specified width and the we average together the edges where adjacent segments touch
-export const strokeToFill = (data, width, precision) => {
+export const strokeToFill = (data, width, precision, pathClosed) => {
   const outlinedStrokes = outlineStrokes(data, width, precision),
-    averagedSegmentJoins = averageSegmentJoins(outlinedStrokes, precision);
+    averagedSegmentJoins = averageSegmentJoins(outlinedStrokes, precision, pathClosed);
 
   return averagedSegmentJoins;
 };
@@ -148,7 +148,7 @@ const outlineStrokes = (data, width, precision) => {
 // An internal function taking outlinedData (from outlineStrokes()) and averaging adjacent edges
 // If we didn't do this, our data would be fillable, but it would look stroked
 // This function fixes where segments overlap and underlap each other
-const averageSegmentJoins = (outlinedData, precision) => {
+const averageSegmentJoins = (outlinedData, precision, pathClosed) => {
   // Find the average x and y between two points (p0 and p1)
   const avg = (p0, p1) => ({
     x: (p0.x + p1.x) / 2,
@@ -162,11 +162,15 @@ const averageSegmentJoins = (outlinedData, precision) => {
     y: avg.y
   });
 
+  const init_outlinedData = JSON.parse(JSON.stringify(outlinedData)); //clone initial outlinedData Object
+
   for (let i = 0; i < outlinedData.length; i++) {
-    const currentSamples = outlinedData[i].samples, // The current segment's samples
-      nextSamples = outlinedData[i + 1]
-        ? outlinedData[i + 1].samples
-        : outlinedData[0].samples, // The next segment's samples, otherwise, the first segment's samples
+    // If path is closed: the current segment's samples;
+    // If path is open: the current segments' samples, as long as it's not the last segment; Otherwise, the current segments' sample of the initial outlinedData object
+    const currentSamples = pathClosed ? outlinedData[i].samples : ( outlinedData[i + 1] ? outlinedData[i].samples : init_outlinedData[i].samples ),
+      // If path is closed: the next segment's samples, otherwise, the first segment's samples
+      // If path is open: the next segment's samples, otherwise, the first segment's samples of the initial outlinedData object
+      nextSamples = pathClosed ? ( outlinedData[i + 1] ? outlinedData[i + 1].samples : outlinedData[0].samples ) : ( outlinedData[i + 1] ? outlinedData[i + 1].samples : init_outlinedData[0].samples ),
       currentMiddle = currentSamples.length / 2, // The "middle" sample in the current segment's samples
       nextEnd = nextSamples.length - 1; // The last sample in the next segment's samples
 
