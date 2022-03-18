@@ -12,6 +12,9 @@ export default class GradientPath {
     this.samples = samples;
     this.precision = precision;
 
+    // Check if nodeName is path and that the path is closed, otherwise it's closed by default
+    this.pathClosed = this.path.nodeName == 'path' ? this.path.getAttribute('d').match(/z/gi) : true; 
+
     // Store the render cycles that the user creates
     this.renders = [];
 
@@ -46,7 +49,7 @@ export default class GradientPath {
       // If we do not specify a width and fill, then we will be stroking and can leave the data "as is"
       renderCycle.data =
         width && fill
-          ? strokeToFill(this.data, width, this.precision)
+          ? strokeToFill(this.data, width, this.precision, this.pathClosed)
           : this.data;
 
       for (let j = 0; j < renderCycle.data.length; j++) {
