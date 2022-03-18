@@ -11,7 +11,6 @@
     "build": "rollup -c",
     "prepare": "yarn build",
     "version": "auto-changelog -p && git add CHANGELOG.md",
-    "release": "np",
     "start": "start-storybook",
     "storybook-build": "build-storybook -c .storybook",
     "predeploy": "yarn storybook-build",
@@ -41,6 +40,12 @@
       "pre-commit": "pretty-quick --staged"
     }
   },
+  "np": {
+    "2fa": true
+  },
+  "dependencies": {
+    "tinygradient": "^1.0.0"
+  },
   "devDependencies": {
     "@babel/core": "^7.4.5",
     "@babel/preset-env": "^7.4.5",
@@ -63,8 +68,5 @@
     "rollup-plugin-filesize": "^6.1.1",
     "rollup-plugin-node-resolve": "^5.2.0",
     "rollup-plugin-peer-deps-external": "^2.2.0"
-  },
-  "dependencies": {
-    "tinygradient": "^1.0.0"
   }
 }
