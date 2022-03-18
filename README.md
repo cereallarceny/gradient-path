@@ -6,8 +6,7 @@
 
 A small library to have any gradient follow along any SVG path
 
-- One dependency ([tinygradient](https://github.com/mistic100/tinygradient))
-- 2.1kb gzipped
+- 8.8kb gzipped
 - Use on any valid SVG `path`
 - **You can pair it with D3.js, or use it standalone**
 
