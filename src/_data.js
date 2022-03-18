@@ -1,7 +1,7 @@
-import { DEFAULT_PRECISION } from './GradientPath';
 import Sample from './Sample';
 import Segment from './Segment';
 import { convertPathToNode } from './_utils';
+import { DEFAULT_PRECISION } from './_constants';
 
 // The main function responsible for getting data
 // This will take a path, number of samples, number of samples, and a precision value
@@ -69,7 +69,11 @@ export const getData = ({
 // We start by outlining the stroked data given a specified width and the we average together the edges where adjacent segments touch
 export const strokeToFill = (data, width, precision, pathClosed) => {
   const outlinedStrokes = outlineStrokes(data, width, precision),
-    averagedSegmentJoins = averageSegmentJoins(outlinedStrokes, precision, pathClosed);
+    averagedSegmentJoins = averageSegmentJoins(
+      outlinedStrokes,
+      precision,
+      pathClosed
+    );
 
   return averagedSegmentJoins;
 };
@@ -167,10 +171,20 @@ const averageSegmentJoins = (outlinedData, precision, pathClosed) => {
   for (let i = 0; i < outlinedData.length; i++) {
     // If path is closed: the current segment's samples;
     // If path is open: the current segments' samples, as long as it's not the last segment; Otherwise, the current segments' sample of the initial outlinedData object
-    const currentSamples = pathClosed ? outlinedData[i].samples : ( outlinedData[i + 1] ? outlinedData[i].samples : init_outlinedData[i].samples ),
+    const currentSamples = pathClosed
+        ? outlinedData[i].samples
+        : outlinedData[i + 1]
+        ? outlinedData[i].samples
+        : init_outlinedData[i].samples,
       // If path is closed: the next segment's samples, otherwise, the first segment's samples
       // If path is open: the next segment's samples, otherwise, the first segment's samples of the initial outlinedData object
-      nextSamples = pathClosed ? ( outlinedData[i + 1] ? outlinedData[i + 1].samples : outlinedData[0].samples ) : ( outlinedData[i + 1] ? outlinedData[i + 1].samples : init_outlinedData[0].samples ),
+      nextSamples = pathClosed
+        ? outlinedData[i + 1]
+          ? outlinedData[i + 1].samples
+          : outlinedData[0].samples
+        : outlinedData[i + 1]
+        ? outlinedData[i + 1].samples
+        : init_outlinedData[0].samples,
       currentMiddle = currentSamples.length / 2, // The "middle" sample in the current segment's samples
       nextEnd = nextSamples.length - 1; // The last sample in the next segment's samples
 

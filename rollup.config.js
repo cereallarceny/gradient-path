@@ -10,21 +10,16 @@ export default {
   input: 'src/index.js',
   output: [
     {
-      file: pkg.browser,
-      format: 'umd',
-      name: 'gradient-path'
-    },
-    {
       file: pkg.main,
       format: 'cjs',
-      name: 'gradient-path'
+      sourcemap: true
     },
     {
       file: pkg.module,
-      format: 'es'
+      format: 'esm',
+      sourcemap: true
     }
   ],
-  external: ['tinygradient'],
   plugins: [
     peerDepsExternal(),
     babel({ exclude: 'node_modules/**' }),

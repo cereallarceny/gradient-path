@@ -1,7 +1,6 @@
 import { getData, strokeToFill } from './_data';
 import { svgElem, styleAttrs, segmentToD, convertPathToNode } from './_utils';
-
-export const DEFAULT_PRECISION = 2;
+import { DEFAULT_PRECISION } from './_constants';
 
 export default class GradientPath {
   constructor({ path, segments, samples, precision = DEFAULT_PRECISION }) {
@@ -13,7 +12,10 @@ export default class GradientPath {
     this.precision = precision;
 
     // Check if nodeName is path and that the path is closed, otherwise it's closed by default
-    this.pathClosed = this.path.nodeName == 'path' ? this.path.getAttribute('d').match(/z/gi) : true; 
+    this.pathClosed =
+      this.path.nodeName == 'path'
+        ? this.path.getAttribute('d').match(/z/gi)
+        : true;
 
     // Store the render cycles that the user creates
     this.renders = [];

@@ -25,13 +25,6 @@ A small library to have any gradient follow along any SVG path
 
 Installation instructions depend on whether or not you are using D3.js in your project. If you intend to use D3 alongside `gradient-path`, then you **do not need** to install `tinygradient`. If you're going to use gradient-path standalone within your Javascript project, you must also install those dependencies (but don't worry, both pacakges gzipped together is around 8kb... so it's negligible).
 
-**Installation with any Javascript project:**
-
-NPM: `npm install --save gradient-path tinygradient`<br />
-Yarn: `yarn add gradient-path tinygradient`
-
-**Installation with D3.js**
-
 NPM: `npm install --save gradient-path`<br />
 Yarn: `yarn add gradient-path`
 
@@ -42,7 +35,7 @@ Inspired by the chainable nature of D3, we figured the API should follow suit.
 **Example in Javascript:**
 
 ```js
-import GradientPath from 'gradient-path';
+import { GradientPath } from 'gradient-path';
 
 const gp = new GradientPath({
   path: document.querySelector('#gradient-path path'),

@@ -8,7 +8,7 @@ import { withKnobs, number, text } from '@storybook/addon-knobs';
 
 import { createDataKnobs, Container, markdownStyling } from './helpers';
 
-import GradientPath from '..';
+import { GradientPath } from '..';
 
 const sampleColors = [
   { color: '#C6FFDD', pos: 0 },
