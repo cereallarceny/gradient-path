@@ -1,9 +1,33 @@
 import { getData, strokeToFill } from './_data';
 import { svgElem, styleAttrs, segmentToD, convertPathToNode } from './_utils';
 import { DEFAULT_PRECISION } from './_constants';
+import Segment from './Segment';
+import Sample from './Sample';
 
 export default class GradientPath {
-  constructor({ path, segments, samples, precision = DEFAULT_PRECISION }) {
+  public path: Record<string, any>;
+  public segments: number;
+  public samples: number;
+  public precision?: number;
+
+  public pathClosed: boolean;
+  public renders: any[];
+  public group: SVGElement;
+  public svg: SVGElement;
+
+  public data: Segment[];
+
+  constructor({
+    path,
+    segments,
+    samples,
+    precision = DEFAULT_PRECISION
+  }: {
+    path: Record<string, any>;
+    segments: number;
+    samples: number;
+    precision?: number;
+  }) {
     // If the path being passed isn't a DOM node already, make it one
     this.path = convertPathToNode(path);
 
@@ -36,9 +60,21 @@ export default class GradientPath {
     this.path.parentNode.removeChild(this.path);
   }
 
-  render({ type, stroke, strokeWidth, fill, width }) {
+  render({
+    type,
+    stroke,
+    strokeWidth,
+    fill,
+    width
+  }: {
+    type: string;
+    stroke?: string;
+    strokeWidth?: number;
+    fill: Record<string, any>[];
+    width: number;
+  }) {
     // Store information from this render cycle
-    const renderCycle = {};
+    const renderCycle: Record<string, any> = {};
 
     // Create a group for each element
     const elemGroup = svgElem('g', { class: `element-${type}` });
@@ -51,7 +87,7 @@ export default class GradientPath {
       // If we do not specify a width and fill, then we will be stroking and can leave the data "as is"
       renderCycle.data =
         width && fill
-          ? strokeToFill(this.data, width, this.precision, this.pathClosed)
+          ? strokeToFill(this.data, width, this.precision!, this.pathClosed)
           : this.data;
 
       for (let j = 0; j < renderCycle.data.length; j++) {
@@ -62,7 +98,12 @@ export default class GradientPath {
           svgElem('path', {
             class: 'path-segment',
             d: segmentToD(samples),
-            ...styleAttrs(fill, stroke, strokeWidth, progress)
+            ...styleAttrs(
+              (fill as unknown) as string,
+              stroke!,
+              strokeWidth!,
+              progress
+            )
           })
         );
       }
@@ -79,7 +120,12 @@ export default class GradientPath {
             cx: x,
             cy: y,
             r: width / 2,
-            ...styleAttrs(fill, stroke, strokeWidth, progress)
+            ...styleAttrs(
+              (fill as unknown) as string,
+              stroke!,
+              strokeWidth!,
+              progress
+            )
           })
         );
       }

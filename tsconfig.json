@@ -1,0 +1,18 @@
+{
+  "exclude": ["node_modules", "./**/*.test.ts"],
+  "compilerOptions": {
+    "target": "es2016",
+    "lib": ["es6", "dom"],
+    "module": "commonjs",
+    "rootDir": ".",
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "declaration": true,
+    "outDir": "build",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "noImplicitAny": true,
+    "skipLibCheck": true
+  }
+}
