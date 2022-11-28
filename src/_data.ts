@@ -139,7 +139,7 @@ const outlineStrokes = (data: Segment[], width: number, precision: number) => {
         p0Perps = getPerpSamples(angle, radius, precision, p0), // Get perpedicular points with a distance of radius away from p0
         p1Perps = getPerpSamples(angle, radius, precision, p1); // Get perpedicular points with a distance of radius away from p1
 
-      // We only need the p0 perpendenciular points for the first sample
+      // We only need the p0 perpendecular points for the first sample
       // The p0 for j > 0 will always be the same as p1 anyhow, so let's not add redundant points
       if (j === 0) {
         segmentSamples.push(...p0Perps);

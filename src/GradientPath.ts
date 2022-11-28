@@ -2,7 +2,14 @@ import { getData, strokeToFill } from './_data';
 import { svgElem, styleAttrs, segmentToD, convertPathToNode } from './_utils';
 import { DEFAULT_PRECISION } from './_constants';
 import Segment from './Segment';
-import Sample from './Sample';
+
+export interface RenderOptions {
+  type: string;
+  stroke?: string;
+  strokeWidth?: number;
+  fill: Record<string, any>[];
+  width: number;
+}
 
 export default class GradientPath {
   public path: Record<string, any>;
@@ -31,9 +38,39 @@ export default class GradientPath {
     // If the path being passed isn't a DOM node already, make it one
     this.path = convertPathToNode(path);
 
+    // Check if nodeName is path and that the path is closed, otherwise it's closed by default
+    this.pathClosed =
+      this.path.nodeName == 'path'
+        ? this.path.getAttribute('d').match(/z/gi)
+        : true;
+
+    // Get the data
+    this.data = getData({ path, segments, samples, precision });
+
     this.segments = segments;
     this.samples = samples;
     this.precision = precision;
+
+    // Store the render cycles that the user creates
+    this.renders = [];
+
+    // Append a group to the SVG to capture everything we render and ensure our paths and circles are properly encapsulated
+    this.svg = path.closest('svg');
+
+    this.group = svgElem('g', {
+      class: 'gradient-path'
+    });
+
+    // Append the main group to the SVG
+    this.svg.appendChild(this.group);
+
+    // Remove the main path once we have the data values
+    // this.path.parentNode.removeChild(this.path);
+  }
+
+  update(options: RenderOptions, path: Record<string, any> = this.path) {
+    // If the path being passed isn't a DOM node already, make it one
+    this.path = convertPathToNode(path);
 
     // Check if nodeName is path and that the path is closed, otherwise it's closed by default
     this.pathClosed =
@@ -41,95 +78,69 @@ export default class GradientPath {
         ? this.path.getAttribute('d').match(/z/gi)
         : true;
 
-    // Store the render cycles that the user creates
-    this.renders = [];
-
-    // Append a group to the SVG to capture everything we render and ensure our paths and circles are properly encapsulated
-    this.svg = path.closest('svg');
-    this.group = svgElem('g', {
-      class: 'gradient-path'
+    // Get the data
+    this.data = getData({
+      path,
+      segments: this.segments,
+      samples: this.samples,
+      precision: this.precision!
     });
 
-    // Get the data
-    this.data = getData({ path, segments, samples, precision });
+    const { children } = this.renderSegments(options);
 
-    // Append the main group to the SVG
-    this.svg.appendChild(this.group);
+    const paths = children.map(child => child.getAttribute('d')) as string[];
+    const els = Array.from(
+      this.group.querySelectorAll('.path-segment')
+    ) as SVGPathElement[];
 
-    // Remove the main path once we have the data values
-    this.path.parentNode.removeChild(this.path);
+    els.forEach((el, index) => el.setAttribute('d', paths[index]));
   }
 
-  render({
-    type,
-    stroke,
-    strokeWidth,
-    fill,
-    width
-  }: {
-    type: string;
-    stroke?: string;
-    strokeWidth?: number;
-    fill: Record<string, any>[];
-    width: number;
-  }) {
-    // Store information from this render cycle
+  renderSegments({ stroke, strokeWidth, fill, width }: RenderOptions) {
     const renderCycle: Record<string, any> = {};
+
+    renderCycle.data =
+      width && fill
+        ? strokeToFill(this.data, width, this.precision!, this.pathClosed)
+        : this.data;
+
+    const children = renderCycle.data.map((seg: Segment) => {
+      const { samples, progress } = seg;
+
+      return svgElem('path', {
+        class: 'path-segment',
+        d: segmentToD(samples),
+        ...styleAttrs(
+          (fill as unknown) as string,
+          stroke!,
+          strokeWidth!,
+          progress!
+        )
+      });
+    }) as SVGPathElement[];
+
+    return { renderCycle, children };
+  }
+
+  render({ type = 'path', stroke, strokeWidth, fill, width }: RenderOptions) {
+    // Store information from this render cycle
+    const { children, renderCycle } = this.renderSegments({
+      type,
+      stroke,
+      strokeWidth,
+      fill,
+      width
+    });
 
     // Create a group for each element
     const elemGroup = svgElem('g', { class: `element-${type}` });
-
     this.group.appendChild(elemGroup);
+
     renderCycle.group = elemGroup;
 
-    if (type === 'path') {
-      // If we specify a width and fill, then we need to outline the path and then average the join points of the segments
-      // If we do not specify a width and fill, then we will be stroking and can leave the data "as is"
-      renderCycle.data =
-        width && fill
-          ? strokeToFill(this.data, width, this.precision!, this.pathClosed)
-          : this.data;
-
-      for (let j = 0; j < renderCycle.data.length; j++) {
-        const { samples, progress } = renderCycle.data[j];
-
-        // Create a path for each segment and append it to its elemGroup
-        elemGroup.appendChild(
-          svgElem('path', {
-            class: 'path-segment',
-            d: segmentToD(samples),
-            ...styleAttrs(
-              (fill as unknown) as string,
-              stroke!,
-              strokeWidth!,
-              progress
-            )
-          })
-        );
-      }
-    } else if (type === 'circle') {
-      renderCycle.data = this.data.flatMap(({ samples }) => samples);
-
-      for (let j = 0; j < renderCycle.data.length; j++) {
-        const { x, y, progress } = renderCycle.data[j];
-
-        // Create a circle for each sample and append it to its elemGroup
-        elemGroup.appendChild(
-          svgElem('circle', {
-            class: 'circle-sample',
-            cx: x,
-            cy: y,
-            r: width / 2,
-            ...styleAttrs(
-              (fill as unknown) as string,
-              stroke!,
-              strokeWidth!,
-              progress
-            )
-          })
-        );
-      }
-    }
+    children.forEach(element => {
+      elemGroup.appendChild(element);
+    });
 
     // Save the information in the current renderCycle and pop it onto the renders array
     this.renders.push(renderCycle);
