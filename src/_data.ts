@@ -12,6 +12,11 @@ export const getData = ({
   segments,
   samples,
   precision = DEFAULT_PRECISION
+}: {
+  path: Record<string, any>;
+  segments: number;
+  samples: number;
+  precision: number;
 }) => {
   // Convert the given path to a DOM node if it isn't already one
   path = convertPathToNode(path);
@@ -67,7 +72,12 @@ export const getData = ({
 // The function responsible for converting strokable data (from getData()) into fillable data
 // This allows any SVG path to be filled instead of just stroked, allowing for the user to fill and stroke paths simultaneously
 // We start by outlining the stroked data given a specified width and the we average together the edges where adjacent segments touch
-export const strokeToFill = (data, width, precision, pathClosed) => {
+export const strokeToFill = (
+  data: Segment[],
+  width: number,
+  precision: number,
+  pathClosed: boolean
+) => {
   const outlinedStrokes = outlineStrokes(data, width, precision),
     averagedSegmentJoins = averageSegmentJoins(
       outlinedStrokes,
@@ -79,9 +89,14 @@ export const strokeToFill = (data, width, precision, pathClosed) => {
 };
 
 // An internal function for outlining stroked data
-const outlineStrokes = (data, width, precision) => {
+const outlineStrokes = (data: Segment[], width: number, precision: number) => {
   // We need to get the points perpendicular to a startPoint, given an angle, radius, and precision
-  const getPerpSamples = (angle, radius, precision, startPoint) => {
+  const getPerpSamples = (
+    angle: number,
+    radius: number,
+    precision: number,
+    startPoint: { x: number; y: number }
+  ) => {
     const p0 = new Sample({
         ...startPoint,
         x: Math.sin(angle) * radius + startPoint.x,
@@ -124,7 +139,7 @@ const outlineStrokes = (data, width, precision) => {
         p0Perps = getPerpSamples(angle, radius, precision, p0), // Get perpedicular points with a distance of radius away from p0
         p1Perps = getPerpSamples(angle, radius, precision, p1); // Get perpedicular points with a distance of radius away from p1
 
-      // We only need the p0 perpendenciular points for the first sample
+      // We only need the p0 perpendecular points for the first sample
       // The p0 for j > 0 will always be the same as p1 anyhow, so let's not add redundant points
       if (j === 0) {
         segmentSamples.push(...p0Perps);
@@ -152,15 +167,23 @@ const outlineStrokes = (data, width, precision) => {
 // An internal function taking outlinedData (from outlineStrokes()) and averaging adjacent edges
 // If we didn't do this, our data would be fillable, but it would look stroked
 // This function fixes where segments overlap and underlap each other
-const averageSegmentJoins = (outlinedData, precision, pathClosed) => {
+const averageSegmentJoins = (
+  outlinedData: Segment[],
+  precision: number,
+  pathClosed: boolean
+) => {
   // Find the average x and y between two points (p0 and p1)
-  const avg = (p0, p1) => ({
+  const avg = (p0: { x: number; y: number }, p1: { x: number; y: number }) => ({
     x: (p0.x + p1.x) / 2,
     y: (p0.y + p1.y) / 2
   });
 
   // Recombine the new x and y positions with all the other keys in the object
-  const combine = (segment, pos, avg) => ({
+  const combine = (
+    segment: any[],
+    pos: number,
+    avg: { x: number; y: number }
+  ) => ({
     ...segment[pos],
     x: avg.x,
     y: avg.y
